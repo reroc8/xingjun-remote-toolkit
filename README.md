@@ -18,7 +18,9 @@
 
 ![菜单界面](assets/menu-preview.svg)
 
-> 上图内容与程序实际输出逐字一致，仅配色做了美化 —— 实际运行时是 `color 0A` 的纯黑底浅绿字。
+> 上图就是程序的实际输出：**单列**、`color 0A` 的黑底浅绿字，内容逐字一致。
+> 唯一和你屏幕上不同的是**字体** —— 图里用的是接近 cmd 的等宽字体，
+> 你实际看到的取决于自己 cmd 的字体设置（中文系统默认一般是新宋体）。
 
 ---
 
@@ -281,7 +283,8 @@ A：可能会。因为脚本会调用 `reg add`、`taskkill` 这类命令，行�
 |---|---|
 | `星君常用远程工具v1.7.bat` | **稳定版**主程序。GBK 编码 + CRLF 换行，可直接用记事本编辑 |
 | `星君常用远程工具v1.8.bat` | 开发版（主分支），尚未发版 |
-| `assets/menu-preview.svg` | README 顶部的界面预览图 |
+| `assets/menu-preview.svg` | README 顶部的界面预览图（v1.8 的菜单） |
+| `assets/menu-preview-v1.7.svg` | v1.7 的菜单预览图，给 v1.7 的 Release 说明用 |
 | `tests/check_bat.py` | 静态检查：编码、换行、悬空跳转、括号配对、`set /p` 残留值 |
 | `tests/run-tests.ps1` | Windows 冒烟测试：在真机跑脚本并断言输出 |
 | `.github/workflows/test.yml` | 每次推送自动跑上面两项 |
