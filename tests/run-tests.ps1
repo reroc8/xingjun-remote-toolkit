@@ -64,6 +64,30 @@ $toolText = $toolText.Replace('if not "%CONSOLE_CP%"=="936" chcp 936 >nul 2>&1',
                               'rem [测试环境] 见 run-tests.ps1 里的说明')
 [System.IO.File]::WriteAllText($tool, $toolText, $gbk)
 
+function Read-Output {
+    # 测试环境里不能用 chcp(它会让 set /p 读不到重定向输入), 所以脚本输出的
+    # 编码取决于控制台默认代码页, 不一定是 GBK。这里按「解出来 CJK 字符最多」
+    # 的编码来读, GBK 和 UTF-8 都能自动认出来。
+    param([string]$Path)
+    $bytes = [System.IO.File]::ReadAllBytes($Path)
+    $cands = @(
+        [System.Text.Encoding]::GetEncoding(936),
+        (New-Object System.Text.UTF8Encoding $false),
+        [System.Text.Encoding]::Default
+    )
+    $best = ''; $bestScore = -1
+    foreach ($enc in $cands) {
+        $t = $enc.GetString($bytes)
+        $cjk = 0
+        foreach ($ch in $t.ToCharArray()) {
+            $c = [int]$ch
+            if ($c -ge 0x4E00 -and $c -le 0x9FFF) { $cjk++ }
+        }
+        if ($cjk -gt $bestScore) { $bestScore = $cjk; $best = $t }
+    }
+    return $best
+}
+
 function Invoke-Bat {
     param([string]$Bat, [string]$InputText, [string]$BatArgs = '')
     $id = [guid]::NewGuid().ToString('N').Substring(0, 8)
@@ -71,7 +95,7 @@ function Invoke-Bat {
     $outF = Join-Path $work "out-$id.txt"
     $runF = Join-Path $work "run-$id.cmd"
     [System.IO.File]::WriteAllText($inF, $InputText, $gbk)
-    $w = "@echo off`r`nchcp 936 >nul`r`n`"$Bat`" $BatArgs < `"$inF`" > `"$outF`" 2>&1`r`n"
+    $w = "@echo off`r`n`"$Bat`" $BatArgs < `"$inF`" > `"$outF`" 2>&1`r`n"
     [System.IO.File]::WriteAllText($runF, $w, [System.Text.Encoding]::ASCII)
     $p = Start-Process -FilePath $env:ComSpec -ArgumentList '/c', $runF `
                        -PassThru -NoNewWindow -WorkingDirectory $work
@@ -81,7 +105,7 @@ function Invoke-Bat {
     }
     $text = ''
     if (Test-Path -LiteralPath $outF) {
-        $text = [System.IO.File]::ReadAllText($outF, $gbk)
+        $text = Read-Output $outF
     }
     return [pscustomobject]@{ TimedOut = $false; Output = $text; ExitCode = $p.ExitCode }
 }
