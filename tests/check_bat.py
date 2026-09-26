@@ -131,6 +131,16 @@ def check(path: pathlib.Path):
                 f"中间的命令会重置 errorlevel, 导致选择结果判错"
             )
 
+    # --- 5.8 结束 / 重启资源管理器 ---
+    # 实测: taskkill 掉 explorer 之后桌面和任务栏再也回不来(黑屏),
+    # 提权上下文里怎么 start 都没用。远程协助时屏幕一黑连接就断, 不可接受。
+    for i, l in enumerate(lines, 1):
+        if re.search(r"taskkill[^\r\n]*explorer", l, re.I) or \
+           re.search(r"start\s+\"?explorer\.exe", l, re.I):
+            errors.append(
+                f"第 {i} 行: 出现了结束/重启资源管理器的操作 —— 会导致黑屏回不来, 见技能 §3.11"
+            )
+
     # --- 6 延迟展开与 ! ---
     if re.search(r"EnableDelayedExpansion", text, re.I):
         if re.search(r"^\s*echo[^\r\n]*!", text, re.M):

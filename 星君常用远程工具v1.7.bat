@@ -573,8 +573,11 @@ if "%IS_ADMIN%"=="0" (
     goto MENU
 )
 echo -------------------- 去除快捷方式箭头 --------------------
-echo   原理: 将快捷方式图标替换为透明图标, 并重启资源管理器。
-echo   桌面和任务栏会闪一下, 属正常现象。
+echo   原理: 将快捷方式图标替换为一张接近透明的图标。
+echo.
+echo   [!] 本工具不会去动你的资源管理器 (结束它会让桌面黑屏几秒,
+echo       远程协助时屏幕一黑连接就断了)。改完之后需要注销再登录,
+echo       或者重启电脑, 才会生效。
 echo.
 echo   [!] 本功能以管理员身份重启资源管理器, 新的资源管理器可能继承
 echo       管理员权限, 导致桌面拖拽 / 部分系统应用异常。
@@ -587,11 +590,9 @@ if errorlevel 1 (
     goto DONE
 )
 echo.
-echo   正在重启资源管理器...
-taskkill /f /im explorer.exe >nul 2>&1
-start explorer.exe
 echo.
-echo   完成, 快捷方式小箭头已去除。
+echo   注册表已改好。
+echo   注销再登录, 或者重启电脑之后, 小箭头就没了。
 goto DONE
 
 :ARROW_ON
@@ -616,11 +617,8 @@ if errorlevel 1 (
 )
 echo   正在还原注册表...
 reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /f >nul 2>&1
-echo   正在重启资源管理器...
-taskkill /f /im explorer.exe >nul 2>&1
-start explorer.exe
 echo.
-echo   完成, 快捷方式小箭头已恢复。
+echo   注册表已还原。注销再登录, 或者重启电脑之后, 小箭头就回来了。
 goto DONE
 
 :: ---------------- 维护 ----------------
@@ -673,9 +671,7 @@ echo   [4/5] 恢复快捷方式箭头...
 reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 >nul 2>&1
 if errorlevel 1 goto RA_NO_ARROW
 reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /f >nul 2>&1
-echo         注册表项已删除, 正在重启资源管理器...
-taskkill /f /im explorer.exe >nul 2>&1
-start explorer.exe
+echo         注册表项已删除, 注销或重启后生效。
 goto RA_ARROW_DONE
 :RA_NO_ARROW
 echo         当前未去除箭头, 跳过。
