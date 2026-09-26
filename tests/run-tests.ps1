@@ -328,6 +328,14 @@ Test-Case -Name '确认提示按 N 走取消分支 (不改系统)' -NeedsAdmin `
 # Y 分支的正确性由 check_bat.py 保证: 确认块必须是 choice 紧跟 if errorlevel。
 
 
+# 修复子菜单: 只验证「能打开、能返回」, 绝不真的执行修复动作
+# (SFC/DISM 会跑十几分钟, 而且会改系统)
+if ($hasRestore) {
+    Test-Case -Name '功能 27 修复子菜单能打开并返回' `
+              -InputText "27`n0`n0`n0`n" -BatArgs '/elevated' `
+              -Contain @('重建图标缓存', '系统映像修复')
+}
+
 # ---------------------------------------------------------------- 汇总
 Write-Host ''
 $width = ($results | Measure-Object -Property Name -Maximum).Maximum.Length

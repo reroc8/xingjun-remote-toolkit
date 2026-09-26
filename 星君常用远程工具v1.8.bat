@@ -100,6 +100,9 @@ echo.
 echo   [维护]
 echo   26   还原全部改动  [需管理员, 一键恢复防火墙/更新/UAC/箭头]
 echo.
+echo   [修复]
+echo   27   一键修复  [系统文件 / 系统映像 / 网络 / 图标缓存, 子菜单]
+echo.
 echo    0   退出
 echo.
 set "choice="
@@ -132,9 +135,10 @@ if "%choice%"=="23" goto UAC_STATUS
 if "%choice%"=="24" goto ARROW_OFF
 if "%choice%"=="25" goto ARROW_ON
 if "%choice%"=="26" goto RESTORE_ALL
+if "%choice%"=="27" goto FIX_MENU
 if "%choice%"=="0"  goto QUIT
 echo.
-echo   无效输入, 请输入 0-26 的序号。
+echo   无效输入, 请输入 0-27 的序号。
 set /a BADCNT+=1
 if %BADCNT% GEQ 5 (
     echo.
@@ -740,6 +744,175 @@ echo   全部改动已还原。
 echo.
 echo   提示: UAC 与系统更新的改动需要重启电脑后彻底生效。
 goto DONE
+
+:: ---------------- 修复 ----------------
+
+:FIX_MENU
+cls
+call :CHECK_ADMIN
+if "%IS_ADMIN%"=="0" (
+    echo   [!] 修复功能需要管理员权限。
+    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
+    echo.
+    pause
+    goto MENU
+)
+echo -------------------- 一键修复 --------------------
+echo   适用: 电脑卡顿 / 蓝屏 / 更新报错 / 上不了网 / 图标变白。
+echo   全部调用 Windows 自带命令, 不联网、不装东西。
+echo.
+echo     1   全部修复  [系统文件 + 系统映像 + 网络 + 图标缓存]
+echo     2   系统文件检查修复   sfc /scannow
+echo     3   系统映像修复       DISM /RestoreHealth
+echo     4   网络重置修复       winsock + ip reset + flushdns
+echo     5   重建图标缓存
+echo.
+echo     0   返回主菜单
+echo.
+echo   提示:
+echo     - 2 和 3 很慢, 可能要 10-30 分钟, 中途别关窗口
+echo     - 4 会重置网络设置, 完成后一般要重启电脑
+echo.
+set "choice="
+set /p choice=请输入序号后回车: 
+call :NORM
+
+if "%choice%"=="1" goto FIX_ALL
+if "%choice%"=="2" goto FIX_SFC
+if "%choice%"=="3" goto FIX_DISM
+if "%choice%"=="4" goto FIX_NET
+if "%choice%"=="5" goto FIX_ICON
+if "%choice%"=="0" goto MENU
+echo.
+echo   无效输入, 请输入 0-5 的序号。
+timeout /t 2 >nul
+goto FIX_MENU
+
+:FIX_ALL
+cls
+echo -------------------- 一键修复全部 --------------------
+echo   将依次执行:
+echo     1. 系统文件检查修复   sfc /scannow
+echo     2. 系统映像修复       DISM /RestoreHealth
+echo     3. 网络重置修复       winsock + ip reset + flushdns
+echo     4. 重建图标缓存
+echo.
+echo   [!] 整个过程可能要 20-40 分钟, 中途别关窗口。
+echo.
+set "sure="
+choice /c YN /n /m "确认开始? [Y=开始 / N=取消] "
+if errorlevel 2 (
+    echo.
+    echo   已取消。
+    goto DONE
+)
+echo.
+echo ========================================================
+echo   [1/4] 系统文件检查修复  sfc /scannow
+echo ========================================================
+sfc /scannow
+echo.
+echo ========================================================
+echo   [2/4] 系统映像修复  DISM /RestoreHealth
+echo ========================================================
+DISM /Online /Cleanup-Image /RestoreHealth
+echo.
+echo ========================================================
+echo   [3/4] 网络重置修复
+echo ========================================================
+netsh winsock reset
+netsh int ip reset
+ipconfig /flushdns
+echo.
+echo ========================================================
+echo   [4/4] 重建图标缓存
+echo ========================================================
+call :ICON_REBUILD
+echo.
+echo   全部完成。
+echo   网络设置已重置, 请重启电脑后生效。
+goto DONE
+
+:FIX_SFC
+cls
+echo -------------------- 系统文件检查修复 --------------------
+echo   正在执行 sfc /scannow。
+echo   可能要 5-20 分钟, 进度会显示在下面, 中途别关窗口。
+echo.
+sfc /scannow
+echo.
+echo   完成。若提示「无法修复某些文件」, 可以再跑一次功能 3 的 DISM。
+goto DONE
+
+:FIX_DISM
+cls
+echo -------------------- 系统映像修复 --------------------
+echo   正在执行 DISM /Online /Cleanup-Image /RestoreHealth。
+echo   可能要 10-30 分钟, 进度会显示在下面, 中途别关窗口。
+echo.
+DISM /Online /Cleanup-Image /RestoreHealth
+echo.
+echo   完成。这一步修的是系统映像, 建议之后再做一次功能 2 的 sfc。
+goto DONE
+
+:FIX_NET
+cls
+echo -------------------- 网络重置修复 --------------------
+echo   适用: 能上 QQ 但打不开网页 / 网页加载异常 / DNS 解析不正常。
+echo.
+echo   [!] 会重置 Winsock 和 TCP/IP 设置, 完成后需要重启电脑。
+echo.
+set "sure="
+choice /c YN /n /m "确认重置网络设置? [Y=重置 / N=取消] "
+if errorlevel 2 (
+    echo.
+    echo   已取消。
+    goto DONE
+)
+echo.
+echo   [1/3] 重置 Winsock 目录...
+netsh winsock reset
+echo.
+echo   [2/3] 重置 TCP/IP 协议栈...
+netsh int ip reset
+echo.
+echo   [3/3] 刷新 DNS 缓存...
+ipconfig /flushdns
+echo.
+echo   完成。请重启电脑后生效。
+goto DONE
+
+:FIX_ICON
+cls
+echo -------------------- 重建图标缓存 --------------------
+echo   适用: 图标变白 / 图标错乱 / 显示成默认图标。
+echo.
+echo   [!] 会重启资源管理器, 桌面和任务栏会闪一下。
+echo       新的资源管理器可能继承管理员权限, 若出现拖拽异常,
+echo       注销或重启一次电脑即可恢复。
+echo.
+set "sure="
+choice /c YN /n /m "确认重建图标缓存? [Y=执行 /N=取消] "
+if errorlevel 2 (
+    echo.
+    echo   已取消。
+    goto DONE
+)
+echo.
+call :ICON_REBUILD
+echo.
+echo   完成。图标缓存已重建。
+goto DONE
+
+:ICON_REBUILD
+:: 公共子程序: 重启资源管理器并清掉图标缓存文件
+taskkill /f /im explorer.exe >nul 2>&1
+echo   正在删除旧的图标缓存...
+del /a /f "%LocalAppData%\IconCache.db" >nul 2>&1
+del /a /f "%LocalAppData%\Microsoft\Windows\Explorer\iconcache*" >nul 2>&1
+echo   正在重启资源管理器...
+start explorer.exe
+exit /b
 
 :: ---------------- 公共子程序 ----------------
 
