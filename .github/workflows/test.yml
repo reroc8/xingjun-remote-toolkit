@@ -35,4 +35,25 @@ jobs:
 
       - name: 在真实 Windows 上运行脚本
         shell: powershell
-        run: .\tests\run-tests.ps1
+        run: |
+          # 逐个测仓库根目录下的每个 .bat —— 仓库里可能同时有
+          # 已发布的稳定版和主分支上的开发版。
+          # 每个文件用一个独立的 powershell 进程跑, 这样脚本里的 exit
+          # 只影响它自己, $LASTEXITCODE 也能正确反映结果。
+          $bats = @(Get-ChildItem -LiteralPath . -Filter *.bat | Sort-Object Name)
+          Write-Host "待测脚本: $($bats.Name -join ', ')"
+          $failed = @()
+          foreach ($b in $bats) {
+            Write-Host ""
+            Write-Host ("=" * 60)
+            Write-Host "  测试 $($b.Name)"
+            Write-Host ("=" * 60)
+            powershell -NoProfile -ExecutionPolicy Bypass `
+                       -File .\tests\run-tests.ps1 -ScriptPath $b.FullName
+            if ($LASTEXITCODE -ne 0) { $failed += $b.Name }
+          }
+          if ($failed.Count -gt 0) {
+            throw "以下脚本测试失败: $($failed -join ', ')"
+          }
+          Write-Host ""
+          Write-Host "全部脚本测试通过" -ForegroundColor Green

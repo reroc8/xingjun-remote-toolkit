@@ -179,6 +179,12 @@ $apLines = @(
 $adminOut = (Invoke-Bat -Bat $adminProbe -InputText '').Output
 $isAdmin = $adminOut.Contains('FSUTIL=0')
 
+# 断言里不要写死版本号 —— 仓库里可能同时有多个版本的文件要测
+$toolSrc = [System.IO.File]::ReadAllText($ScriptPath, $gbk)
+$ver = [regex]::Match($toolSrc, '星君常用远程工具 (v[\d.]+)').Groups[1].Value
+$hasRestore = $toolSrc.Contains('还原全部改动')
+Write-Host "版本     : $ver" 
+
 Write-Host "被测脚本 : $ScriptPath"
 Write-Host "工作目录 : $work"
 Write-Host "提权检测 : $(($adminOut -split "`r?`n" | Where-Object { $_ }) -join '  ')"
@@ -257,12 +263,13 @@ $TR = ' --------------------'   # 右: 空格 + 横线
 
 Test-Case -Name '菜单能显示并正常退出' `
           -InputText "0`n0`n0`n" -BatArgs '/elevated' `
-          -Contain @('星君常用远程工具 v1.8', '感谢使用, 再见。')
+          -Contain @("星君常用远程工具 $ver", '感谢使用, 再见。')
 
+$menuItems = @('1   查看完整网络配置', '13   端口占用排查', '0   退出')
+if ($hasRestore) { $menuItems += '26   还原全部改动' }
 Test-Case -Name '菜单列出全部条目' `
           -InputText "0`n0`n" -BatArgs '/elevated' `
-          -Contain @('1   查看完整网络配置', '13   端口占用排查',
-                     '26   还原全部改动', '0   退出')
+          -Contain $menuItems
 
 Test-Case -Name '无效输入有提示' `
           -InputText "99`n0`n0`n" -BatArgs '/elevated' `
