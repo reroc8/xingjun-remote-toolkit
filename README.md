@@ -12,9 +12,16 @@
 
 ## 下载
 
-| 文件 | 说明 |
+从 [Releases 页面](https://github.com/reroc8/xingjun-remote-toolkit/releases/latest) 下载附件即可，双击运行，无需安装。
+
+| Release 附件 | 仓库内源文件 |
 |---|---|
-| [星君常用远程工具v1.6.bat](https://github.com/reroc8/xingjun-remote-toolkit/releases/latest) | 主程序，双击即用，无需安装 |
+| `XingjunRemoteTool-v1.6.bat` | `星君常用远程工具v1.6.bat` |
+
+> 两个名字是同一个文件，内容完全一致（SHA256 相同）。
+> GitHub 的 Release 附件名不支持中文，会被自动简化，所以附件用了英文名，
+> 中文说明显示在附件的标签上。介意文件名的话，直接下载仓库里的
+> `星君常用远程工具v1.6.bat` 也是同一份东西。
 
 下载后建议校验一下文件完整性：
 
@@ -25,7 +32,7 @@ SHA256: ce0a7bb62659dbf3efce19d7d2e7da256d4d69e68eb12578701b531bba484c06
 校验方法（Windows 自带）：
 
 ```
-certutil -hashfile 星君常用远程工具v1.6.bat SHA256
+certutil -hashfile XingjunRemoteTool-v1.6.bat SHA256
 ```
 
 ---
