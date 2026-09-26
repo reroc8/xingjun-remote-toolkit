@@ -341,6 +341,18 @@ Test-Case -Name '确认提示按 N 走取消分支 (不改系统)' -NeedsAdmin `
 # Y 分支的正确性由 check_bat.py 保证: 确认块必须是 choice 紧跟 if errorlevel。
 
 
+# 探针: 功能 13 拦截关键进程靠的是解析 tasklist 的 CSV 输出,
+# 先确认这种解析方式在本机拿得到进程名(带引号的 CSV 要去掉引号)
+$pName = & $mkProbe (Join-Path $work 'pname.bat') @(
+    'for /f "tokens=1 delims=," %%n in (''tasklist /fo csv /nh 2^>nul'') do (',
+    '    set "PNAME=%%~n"',
+    '    goto :show',
+    ')',
+    ':show',
+    'echo PNAME=[%PNAME%]')
+Test-Case -Name '探针 tasklist CSV 能解析出进程名' -Bat $pName -InputText "" `
+          -Contain @('PNAME=[') -NotContain @('PNAME=[]', 'PNAME=["')
+
 # 快捷工具子菜单: 只验证能打开能返回, 不真去启动那些程序
 if ($hasToolMenu) {
     Test-Case -Name '功能 30 快捷工具子菜单能打开并返回' `

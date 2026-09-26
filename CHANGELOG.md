@@ -150,6 +150,12 @@
   - 删除了 `:ICON_REBUILD` 和 `:RESTART_EXPLORER` 两个子程序
   - **脚本里已经没有任何 `taskkill explorer` / 重启资源管理器的代码**
 
+- **功能 13（端口占用排查）加了系统关键进程拦截** —— 它本来就能按 PID 强制结束任意进程，
+  选到 `explorer.exe` 就是同一个黑屏后果。现在会先读出进程名，
+  命中关键进程名单（`explorer.exe` / `winlogon.exe` / `wininit.exe` / `csrss.exe` /
+  `smss.exe` / `services.exe` / `lsass.exe` / `dwm.exe` / `sihost.exe` /
+  `fontdrvhost.exe` / `svchost.exe`）就直接拦下，不执行
+
 **界面调整**
 
 - **主菜单改成两列** —— 31 项单列要滚好几屏，两列排完 33 行，一屏看完。

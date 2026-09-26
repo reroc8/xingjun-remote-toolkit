@@ -383,6 +383,12 @@ echo.
 echo   该 PID 对应的进程:
 tasklist /fi "PID eq %pid%"
 echo.
+:: 挡住系统关键进程 —— 强制结束它们的后果不可接受(桌面消失 / 蓝屏)
+set "PNAME="
+for /f "tokens=1 delims=," %%n in ('tasklist /fi "PID eq %pid%" /fo csv /nh 2^>nul') do set "PNAME=%%~n"
+for %%n in (explorer.exe winlogon.exe wininit.exe csrss.exe smss.exe services.exe lsass.exe dwm.exe sihost.exe fontdrvhost.exe svchost.exe) do (
+    if /i "%PNAME%"=="%%n" goto KILL_BLOCKED
+)
 choice /c YN /n /m "确认强制结束上面列出的进程? [Y=结束 / N=取消] "
 if errorlevel 2 (
     echo.
@@ -1147,6 +1153,17 @@ if "%IS_ADMIN%"=="1" exit /b
 net session >nul 2>&1
 if not errorlevel 1 set "IS_ADMIN=1"
 exit /b
+
+:KILL_BLOCKED
+echo.
+echo   [!] %PNAME% 是系统关键进程, 强制结束它会导致桌面消失或系统崩溃。
+echo       已阻止, 没有结束任何进程。
+echo.
+echo   要重启资源管理器的话: 按 Ctrl + Shift + Esc 打开任务管理器,
+echo   在「进程」里找到「Windows 资源管理器」, 右键选「重新启动」。
+echo.
+echo   要结束别的程序, 请重新输入它的 PID。
+goto DONE
 
 :DONE
 set "BADCNT=0"
