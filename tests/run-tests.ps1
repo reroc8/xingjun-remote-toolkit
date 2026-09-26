@@ -142,8 +142,14 @@ function Test-Case {
     if ($r.TimedOut) {
         Add-Result $Name 'FAIL' "超时 $TimeoutSec 秒 (脚本卡住)"
         Write-Host "  ----- 超时详情: $Name -----" -ForegroundColor DarkYellow
-        if (Test-Path -LiteralPath $r.OutFile) {
-            $partial = Read-Output $r.OutFile
+        $copy = "$($r.OutFile).copy"
+        $ok = $false
+        for ($i = 0; $i -lt 10 -and -not $ok; $i++) {
+            try { [System.IO.File]::Copy($r.OutFile, $copy, $true); $ok = $true }
+            catch { Start-Sleep -Milliseconds 300 }
+        }
+        if ($ok) {
+            $partial = Read-Output $copy
             Write-Host "  (已产生的输出 $($partial.Length) 字符, 末尾 800 字符)"
             if ($partial.Length -gt 800) { $partial = $partial.Substring($partial.Length - 800) }
             Write-Host $partial
