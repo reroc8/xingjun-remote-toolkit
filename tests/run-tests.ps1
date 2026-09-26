@@ -10,7 +10,10 @@
 #   -ScriptPath  被测脚本。不传则在仓库根目录里自动找第一个 .bat。
 #   -TimeoutSec  单个用例的超时秒数, 默认 60。超时说明脚本卡住了。
 #
-# 两个 Windows 上的坑, 别改坏:
+# 三个 Windows 上的坑, 别改坏:
+#   0. 测试环境不能用 chcp。执行过 chcp 之后, 无真实控制台 + 重定向输入时
+#      set /p 会读不到任何输入(变量直接不被赋值), 所有功能用例都会跑不起来。
+#      脚本副本里已经把 chcp 相关行移除, 输出编码改由 Read-Output 自动识别。
 #   1. 本文件必须是 UTF-8 with BOM。Windows PowerShell 5.1 会把没有 BOM 的
 #      UTF-8 脚本按系统 ANSI 代码页读, 里面的中文断言会全部乱码。
 #   2. 本文件必须是 CRLF 换行。PowerShell 5.1 对纯 LF 的脚本会解析异常
@@ -212,21 +215,15 @@ $p1 = & $mkProbe (Join-Path $work 'p1.bat') @(
     'set "x="', 'set /p x=pick: ', 'if "%x%"=="11" (echo YES-MATCH) else (echo NO-MATCH)')
 Test-Case -Name '探针1 基线 ASCII 提示' -Bat $p1 -InputText "11`n" -Contain @('YES-MATCH')
 
-$p2 = & $mkProbe (Join-Path $work 'p2.bat') @(
-    'chcp 936 >nul 2>&1', 'set "x="', 'set /p x=pick: ',
-    'if "%x%"=="11" (echo YES-MATCH) else (echo NO-MATCH)')
-Test-Case -Name '探针2 加了 chcp 936' -Bat $p2 -InputText "11`n" -Contain @('YES-MATCH')
+# 注意: 这里刻意不测「chcp 936 + set /p」的组合。
+# 实测在「无真实控制台 + 重定向输入」下, 只要执行过 chcp, 之后的 set /p
+# 就读不到任何输入(变量直接不被赋值)。所以测试环境全程不碰 chcp,
+# 脚本输出改由 Read-Output 自动识别编码。详见 run-tests.ps1 顶部说明。
 
 $p3 = & $mkProbe (Join-Path $work 'p3.bat') @(
     'set "x="', 'set /p x=请输入序号后回车: ',
     'if "%x%"=="11" (echo YES-MATCH) else (echo NO-MATCH)')
 Test-Case -Name '探针3 中文提示' -Bat $p3 -InputText "11`n" -Contain @('YES-MATCH')
-
-$p4 = & $mkProbe (Join-Path $work 'p4.bat') @(
-    'chcp 936 >nul 2>&1', 'title t', 'color 0A',
-    'set "x="', 'set /p x=请输入序号后回车: ',
-    'if "%x%"=="11" (echo YES-MATCH) else (echo NO-MATCH)')
-Test-Case -Name '探针4 中文提示+chcp+title+color' -Bat $p4 -InputText "11`n" -Contain @('YES-MATCH')
 
 $p6 = & $mkProbe (Join-Path $work 'p6.bat') @(
     'cls', 'set "x="', 'set /p x=pick: ',
@@ -299,10 +296,10 @@ Test-Case -Name '确认提示按 N 走取消分支 (不改系统)' -NeedsAdmin `
           -Contain @('已取消。') `
           -NotContain @('排查完成后请用功能 10')
 
-Test-Case -Name '确认提示按 Y 走执行分支 (功能 10)' -NeedsAdmin `
-          -InputText "10`nY`n0`n0`n" -BatArgs '/elevated' `
-          -Contain @('【验证】当前状态') `
-          -NotContain @('已取消。')
+# 这里不测「确认时按 Y」: choice 在 set /p 已经读过一次重定向输入之后,
+# 拿不到后续的按键(实测会走成取消分支)。无真实控制台时驱动不了 choice,
+# 所以只测「按 N 取消」这条不会改动系统的路径。
+# Y 分支的正确性由 check_bat.py 保证: 确认块必须是 choice 紧跟 if errorlevel。
 
 
 # ---------------------------------------------------------------- 汇总
