@@ -9,7 +9,7 @@
 ## [v1.7] — 2026-09-26（第二次重发）
 
 **下载**：[XingjunRemoteTool-v1.7.bat](https://github.com/reroc8/xingjun-remote-toolkit/releases/download/v1.7/XingjunRemoteTool-v1.7.bat)
-**SHA256**：`c7f8488ec7df5bcf102f3e1442b7326bac31765bf4bfc63bdb5808abfac2aa27`
+**SHA256**：`cc82dec49b7e468c942d52de3455d46f9c58d4b413594063ae9847c700fa6589`
 
 第二次重发。修掉：
 
