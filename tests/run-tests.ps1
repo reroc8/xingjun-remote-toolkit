@@ -11,11 +11,11 @@
 #   -TimeoutSec  单个用例的超时秒数, 默认 60。超时说明脚本卡住了。
 #
 # 三个 Windows 上的坑, 别改坏:
-#   0. 代码页要设, 但必须在别的进程里设。同一个 cmd 进程里执行过 chcp 之后,
-#      它的 set /p 就读不到重定向输入了(变量直接不被赋值)。
-#      所以 wrapper 用 `cmd /c chcp 936` 起子进程去设, 控制台代码页变了,
-#      而本进程没执行过 chcp, set /p 依然正常。脚本副本里也把 chcp 相关行
-#      移除了, 双保险。
+#   0. 会「碰控制台」的命令(chcp、mode con)必须在别的进程里执行。
+#      同一个 cmd 进程里执行过它们之后, 它的 set /p 就读不到重定向输入了
+#      (变量直接不被赋值)。所以 wrapper 用 `cmd /c chcp 936` 起子进程设代码页,
+#      而脚本副本里把 chcp 和 mode con 都移除掉, 双保险。
+#      ⚠️ 副作用: 这两行本身就没被测试覆盖, 只能靠真机验证。
 #   1. 本文件必须是 UTF-8 with BOM。Windows PowerShell 5.1 会把没有 BOM 的
 #      UTF-8 脚本按系统 ANSI 代码页读, 里面的中文断言会全部乱码。
 #   2. 本文件必须是 CRLF 换行。PowerShell 5.1 对纯 LF 的脚本会解析异常
@@ -66,11 +66,13 @@ $tool = Join-Path $work 'tool.bat'
 # 这样输出仍是 GBK, set /p 也能正常读到按键。
 $toolText = [System.IO.File]::ReadAllText($ScriptPath, $gbk)
 $toolLines = $toolText -split "`r`n"
-$removed = @($toolLines | Where-Object { $_ -match 'chcp' })
-$toolLines = $toolLines | Where-Object { $_ -notmatch 'chcp' }
+# chcp 和 mode con 都会「碰控制台」, 而无真实控制台 + 重定向输入时,
+# 执行过它们之后同一个进程的 set /p 就读不到任何输入了。两者都在副本里去掉。
+$removed = @($toolLines | Where-Object { $_ -match 'chcp|mode con' })
+$toolLines = $toolLines | Where-Object { $_ -notmatch 'chcp|mode con' }
 $toolText = ($toolLines -join "`r`n")
 [System.IO.File]::WriteAllText($tool, $toolText, $gbk)
-Write-Host "已从测试副本里移除 $($removed.Count) 行含 chcp 的代码:"
+Write-Host "已从测试副本里移除 $($removed.Count) 行会碰控制台的代码 (chcp / mode con):"
 $removed | ForEach-Object { Write-Host "    - $($_.Trim())" }
 
 function Read-Output {
