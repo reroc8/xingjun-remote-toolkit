@@ -60,9 +60,13 @@ $tool = Join-Path $work 'tool.bat'
 # 所以副本里把脚本自己的 chcp 中和掉, 改由 wrapper 在调用前设好代码页 ——
 # 这样输出仍是 GBK, set /p 也能正常读到按键。
 $toolText = [System.IO.File]::ReadAllText($ScriptPath, $gbk)
-$toolText = $toolText.Replace('if not "%CONSOLE_CP%"=="936" chcp 936 >nul 2>&1',
-                              'rem [测试环境] 见 run-tests.ps1 里的说明')
+$toolLines = $toolText -split "`r`n"
+$removed = @($toolLines | Where-Object { $_ -match 'chcp' })
+$toolLines = $toolLines | Where-Object { $_ -notmatch 'chcp' }
+$toolText = ($toolLines -join "`r`n")
 [System.IO.File]::WriteAllText($tool, $toolText, $gbk)
+Write-Host "已从测试副本里移除 $($removed.Count) 行含 chcp 的代码:"
+$removed | ForEach-Object { Write-Host "    - $($_.Trim())" }
 
 function Read-Output {
     # 测试环境里不能用 chcp(它会让 set /p 读不到重定向输入), 所以脚本输出的
@@ -239,37 +243,14 @@ $p5body = @('@echo off', 'set "x="', 'set /p x=pick: ', 'call :NORM',
 $p5 = & $mkProbe (Join-Path $work 'p5.bat') $p5body
 Test-Case -Name '探针5 真实 :NORM 段' -Bat $p5 -InputText "11`n" -Contain @('YES-MATCH')
 
-# 在真实脚本里前后各插一个探测点, 二分定位 set /p 从哪一步开始读不到
-$dbgText = [System.IO.File]::ReadAllText($ScriptPath, $gbk)
-
-# 探测点 A: 紧跟 color 0A, 也就是脚本最开头
-$dA = Join-Path $work 'dbgA.bat'
-[System.IO.File]::WriteAllText($dA, $dbgText.Replace(
-    "color 0A",
-    "color 0A`r`nset `"z=`"`r`nset /p z=early: `r`necho EARLY=[%z%]`r`nexit /b"), $gbk)
-Test-Case -Name '探测点A 脚本开头' -Bat $dA -InputText "11`n" -Contain @('EARLY=[11]') -BatArgs '/elevated'
-
-# 探测点 B: 菜单 echo 块之后、set /p 之前
-$dB = Join-Path $work 'dbgB.bat'
-[System.IO.File]::WriteAllText($dB, $dbgText.Replace(
-    'set "choice="',
-    "set `"y=`"`r`nset /p y=late: `r`necho LATE=[%y%]`r`nexit /b`r`nset `"choice=`""), $gbk)
-Test-Case -Name '探测点B 菜单之后' -Bat $dB -InputText "11`n" -Contain @('LATE=[11]') -BatArgs '/elevated'
-
-# 探测点 C: 去掉 setlocal EnableExtensions 之后
-$dC = Join-Path $work 'dbgC.bat'
-[System.IO.File]::WriteAllText($dC, $dbgText.Replace("setlocal EnableExtensions", "rem no-setlocal").Replace(
-    "color 0A",
-    "color 0A`r`nset `"z=`"`r`nset /p z=early: `r`necho EARLY=[%z%]`r`nexit /b"), $gbk)
-Test-Case -Name '探测点C 去掉 setlocal' -Bat $dC -InputText "11`n" -Contain @('EARLY=[11]') -BatArgs '/elevated'
-
-# 探测点 D: 去掉 chcp
-$dD = Join-Path $work 'dbgD.bat'
-[System.IO.File]::WriteAllText($dD, $dbgText.Replace("chcp 936 >nul 2>&1", "rem no-chcp").Replace(
-    "color 0A",
-    "color 0A`r`nset `"z=`"`r`nset /p z=early: `r`necho EARLY=[%z%]`r`nexit /b"), $gbk)
-Test-Case -Name '探测点D 去掉 chcp' -Bat $dD -InputText "11`n" -Contain @('EARLY=[11]') -BatArgs '/elevated'
-
+# 决定性诊断: 副本里已经没有 chcp 了, 直接看 set /p 能不能读到
+$dbgText = [System.IO.File]::ReadAllText($tool, $gbk)
+$d1 = Join-Path $work 'dbgX.bat'
+[System.IO.File]::WriteAllText($d1, $dbgText.Replace(
+    'set /p choice=请输入序号后回车: ',
+    "set /p choice=请输入序号后回车: `r`necho RAW=[%choice%]`r`nexit /b"), $gbk)
+Test-Case -Name '诊断 set /p 在无 chcp 副本里能否读到' -Bat $d1 `
+          -InputText "11`n" -Contain @('RAW=[11]') -BatArgs '/elevated'
 
 # 功能执行时都会先打一条横线包起来的标题, 用它当断言标记,
 # 免得匹配到菜单里的同名文字造成「假通过」
