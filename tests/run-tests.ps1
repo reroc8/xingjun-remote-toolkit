@@ -208,27 +208,36 @@ $p5body = @('@echo off', 'set "x="', 'set /p x=pick: ', 'call :NORM',
 $p5 = & $mkProbe (Join-Path $work 'p5.bat') $p5body
 Test-Case -Name '探针5 真实 :NORM 段' -Bat $p5 -InputText "11`n" -Contain @('MATCH')
 
-# 直接给真实脚本插一行调试输出, 看 set /p 到底读到了什么
+# 在真实脚本里前后各插一个探测点, 二分定位 set /p 从哪一步开始读不到
 $dbgText = [System.IO.File]::ReadAllText($ScriptPath, $gbk)
-$marker = 'set /p choice=请输入序号后回车: '
 
-$d1 = Join-Path $work 'dbg1.bat'
-[System.IO.File]::WriteAllText($d1,
-    $dbgText.Replace($marker, $marker + "`r`necho RAW=[%choice%]`r`nexit /b"), $gbk)
-Test-Case -Name '调试1 set /p 之后立刻看值' -Bat $d1 `
-          -InputText "11`n" -Contain @('RAW=[11]') -BatArgs '/elevated'
+# 探测点 A: 紧跟 color 0A, 也就是脚本最开头
+$dA = Join-Path $work 'dbgA.bat'
+[System.IO.File]::WriteAllText($dA, $dbgText.Replace(
+    "color 0A",
+    "color 0A`r`nset `"z=`"`r`nset /p z=early: `r`necho EARLY=[%z%]`r`nexit /b"), $gbk)
+Test-Case -Name '探测点A 脚本开头' -Bat $dA -InputText "11`n" -Contain @('EARLY=[11]') -BatArgs '/elevated'
 
-$d2 = Join-Path $work 'dbg2.bat'
-[System.IO.File]::WriteAllText($d2,
-    $dbgText.Replace($marker, $marker + "`r`ncall :NORM`r`necho NORMED=[%choice%]`r`nexit /b"), $gbk)
-Test-Case -Name '调试2 过完 :NORM 之后看值' -Bat $d2 `
-          -InputText "11`n" -Contain @('NORMED=[11]') -BatArgs '/elevated'
+# 探测点 B: 菜单 echo 块之后、set /p 之前
+$dB = Join-Path $work 'dbgB.bat'
+[System.IO.File]::WriteAllText($dB, $dbgText.Replace(
+    'set "choice="',
+    "set `"y=`"`r`nset /p y=late: `r`necho LATE=[%y%]`r`nexit /b`r`nset `"choice=`""), $gbk)
+Test-Case -Name '探测点B 菜单之后' -Bat $dB -InputText "11`n" -Contain @('LATE=[11]') -BatArgs '/elevated'
 
-$d3 = Join-Path $work 'dbg3.bat'
-[System.IO.File]::WriteAllText($d3,
-    $dbgText.Replace($marker, $marker + "`r`nif defined choice (echo DEF=1) else (echo DEF=0)`r`nexit /b"), $gbk)
-Test-Case -Name '调试3 set /p 之后变量是否已定义' -Bat $d3 `
-          -InputText "11`n" -Contain @('DEF=1') -BatArgs '/elevated'
+# 探测点 C: 去掉 setlocal EnableExtensions 之后
+$dC = Join-Path $work 'dbgC.bat'
+[System.IO.File]::WriteAllText($dC, $dbgText.Replace("setlocal EnableExtensions", "rem no-setlocal").Replace(
+    "color 0A",
+    "color 0A`r`nset `"z=`"`r`nset /p z=early: `r`necho EARLY=[%z%]`r`nexit /b"), $gbk)
+Test-Case -Name '探测点C 去掉 setlocal' -Bat $dC -InputText "11`n" -Contain @('EARLY=[11]') -BatArgs '/elevated'
+
+# 探测点 D: 去掉 chcp
+$dD = Join-Path $work 'dbgD.bat'
+[System.IO.File]::WriteAllText($dD, $dbgText.Replace("chcp 936 >nul 2>&1", "rem no-chcp").Replace(
+    "color 0A",
+    "color 0A`r`nset `"z=`"`r`nset /p z=early: `r`necho EARLY=[%z%]`r`nexit /b"), $gbk)
+Test-Case -Name '探测点D 去掉 chcp' -Bat $dD -InputText "11`n" -Contain @('EARLY=[11]') -BatArgs '/elevated'
 
 
 # 功能执行时都会先打一条横线包起来的标题, 用它当断言标记,
