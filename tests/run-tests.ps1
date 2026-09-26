@@ -11,9 +11,11 @@
 #   -TimeoutSec  单个用例的超时秒数, 默认 60。超时说明脚本卡住了。
 #
 # 三个 Windows 上的坑, 别改坏:
-#   0. 测试环境不能用 chcp。执行过 chcp 之后, 无真实控制台 + 重定向输入时
-#      set /p 会读不到任何输入(变量直接不被赋值), 所有功能用例都会跑不起来。
-#      脚本副本里已经把 chcp 相关行移除, 输出编码改由 Read-Output 自动识别。
+#   0. 代码页要设, 但必须在别的进程里设。同一个 cmd 进程里执行过 chcp 之后,
+#      它的 set /p 就读不到重定向输入了(变量直接不被赋值)。
+#      所以 wrapper 用 `cmd /c chcp 936` 起子进程去设, 控制台代码页变了,
+#      而本进程没执行过 chcp, set /p 依然正常。脚本副本里也把 chcp 相关行
+#      移除了, 双保险。
 #   1. 本文件必须是 UTF-8 with BOM。Windows PowerShell 5.1 会把没有 BOM 的
 #      UTF-8 脚本按系统 ANSI 代码页读, 里面的中文断言会全部乱码。
 #   2. 本文件必须是 CRLF 换行。PowerShell 5.1 对纯 LF 的脚本会解析异常
@@ -96,7 +98,12 @@ function Invoke-Bat {
     $outF = Join-Path $work "out-$id.txt"
     $runF = Join-Path $work "run-$id.cmd"
     [System.IO.File]::WriteAllText($inF, $InputText, $gbk)
-    $w = "@echo off`r`n`"$Bat`" $BatArgs < `"$inF`" > `"$outF`" 2>&1`r`n"
+    # 代码页必须在「另一个进程」里设置:
+    #   - 在同一个 cmd 进程里执行 chcp, 之后它的 set /p 就读不到重定向输入
+    #   - 但 chcp 改的是整个控制台的代码页, 所以用 cmd /c 起个子进程设好,
+    #     控制台代码页就变了, 而本进程没执行过 chcp, set /p 依然正常。
+    # 这样脚本输出就是 GBK, 中文断言才能对上。
+    $w = "@echo off`r`ncmd /c chcp 936 >nul`r`n`"$Bat`" $BatArgs < `"$inF`" > `"$outF`" 2>&1`r`n"
     [System.IO.File]::WriteAllText($runF, $w, [System.Text.Encoding]::ASCII)
     $p = Start-Process -FilePath $env:ComSpec -ArgumentList '/c', $runF `
                        -PassThru -NoNewWindow -WorkingDirectory $work
