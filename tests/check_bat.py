@@ -106,6 +106,20 @@ def check(path: pathlib.Path):
                     f"会被 cmd 当成操作符 —— 改用全角字符或加 ^ 转义"
                 )
 
+    # --- 5.7 choice 之后必须紧跟 if errorlevel ---
+    # cmd 的内部命令(echo/set/if 等)会把 ERRORLEVEL 重置为 0,
+    # 中间插一句 echo. 就会让 if errorlevel 永远不成立 ——
+    # 表现是「按 N 取消」失效, 危险操作照样执行。
+    for i, l in enumerate(lines):
+        if "choice /c" not in l or i + 1 >= len(lines):
+            continue
+        nxt = lines[i + 1]
+        if "if errorlevel" not in nxt and not nxt.strip().lower().startswith("goto"):
+            errors.append(
+                f"第 {i + 1} 行: choice 之后紧跟的是 {nxt.strip()!r}, 不是 if errorlevel。"
+                f"中间的命令会重置 errorlevel, 导致选择结果判错"
+            )
+
     # --- 6 延迟展开与 ! ---
     if re.search(r"EnableDelayedExpansion", text, re.I):
         if re.search(r"^\s*echo[^\r\n]*!", text, re.M):

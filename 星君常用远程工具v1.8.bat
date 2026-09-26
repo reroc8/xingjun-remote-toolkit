@@ -250,11 +250,12 @@ echo -------------------- 开启防火墙 --------------------
 echo   将开启全部配置文件 [域 / 专用 / 公用] 的防火墙。
 echo.
 choice /c YN /n /m "确认开启全部配置文件防火墙? [Y=开启 / N=取消] "
-echo.
 if errorlevel 2 (
+    echo.
     echo   已取消。
     goto DONE
 )
+echo.
 echo.
 netsh advfirewall set allprofiles state on
 if errorlevel 1 (
@@ -281,11 +282,12 @@ echo   [!] 将关闭全部配置文件的防火墙, 系统将对入站连接不设防。
 echo       若只是某个程序被拦, 建议改用功能 12 放行端口。
 echo.
 choice /c YN /n /m "确认关闭全部配置文件防火墙? [Y=关闭 / N=取消] "
-echo.
 if errorlevel 2 (
+    echo.
     echo   已取消。
     goto DONE
 )
+echo.
 echo.
 netsh advfirewall set allprofiles state off
 if errorlevel 1 (
@@ -386,11 +388,12 @@ echo   该 PID 对应的进程:
 tasklist /fi "PID eq %pid%"
 echo.
 choice /c YN /n /m "确认强制结束上面列出的进程? [Y=结束 / N=取消] "
-echo.
 if errorlevel 2 (
+    echo.
     echo   已取消。
     goto DONE
 )
+echo.
 taskkill /f /pid %pid%
 if errorlevel 1 (
     echo   [!] 结束失败。若提示拒绝访问, 请以管理员身份运行本工具。
@@ -535,11 +538,12 @@ echo       2. 商店 / UWP 应用大概率打不开, 属正常现象。
 echo       3. 用完请及时用功能 22 恢复启用。
 echo.
 choice /c YN /n /m "确认禁用 UAC 提权弹窗? [Y=禁用 / N=取消] "
-echo.
 if errorlevel 2 (
+    echo.
     echo   已取消。
     goto DONE
 )
+echo.
 echo.
 reg add "%UAC_REG%" /v EnableLUA /t REG_DWORD /d 0 /f
 if errorlevel 1 (
@@ -678,11 +682,12 @@ echo.
 echo   不会动的: 导出的网络配置文件 [导出 目录]
 echo.
 choice /c YN /n /m "确认还原上面列出的全部改动? [Y=还原 / N=取消] "
-echo.
 if errorlevel 2 (
+    echo.
     echo   已取消。
     goto DONE
 )
+echo.
 echo.
 echo   [1/5] 开启防火墙...
 netsh advfirewall set allprofiles state on
