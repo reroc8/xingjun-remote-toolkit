@@ -200,13 +200,36 @@ Test-Case -Name '探针6 加了 cls' -Bat $p6 -InputText "11`n" -Contain @('MATC
 
 # 用真实脚本里的 :NORM 段落, 看它会不会把输入改坏
 $toolText = [System.IO.File]::ReadAllText($tool, $gbk)
-$nm = [regex]::Match($toolText, "(?s):NORM\r\n.*?\r\nexit /b\r\n")
+    $nm = [regex]::Match($toolText, "(?sm)^:NORM\r\n.*?\r\nexit /b\r\n")
 Write-Host "  [信息] 提取到 NORM 段 $($nm.Value.Length) 字符"
 $p5body = @('@echo off', 'set "x="', 'set /p x=pick: ', 'call :NORM',
             'echo VALUE=[%x%]',
             'if "%x%"=="11" (echo MATCH) else (echo NOMATCH)') + ($nm.Value -split "`r`n")
 $p5 = & $mkProbe (Join-Path $work 'p5.bat') $p5body
 Test-Case -Name '探针5 真实 :NORM 段' -Bat $p5 -InputText "11`n" -Contain @('MATCH')
+
+# 直接给真实脚本插一行调试输出, 看 set /p 到底读到了什么
+$dbgText = [System.IO.File]::ReadAllText($ScriptPath, $gbk)
+$marker = 'set /p choice=请输入序号后回车: '
+
+$d1 = Join-Path $work 'dbg1.bat'
+[System.IO.File]::WriteAllText($d1,
+    $dbgText.Replace($marker, $marker + "`r`necho RAW=[%choice%]`r`nexit /b"), $gbk)
+Test-Case -Name '调试1 set /p 之后立刻看值' -Bat $d1 `
+          -InputText "11`n" -Contain @('RAW=[11]') -BatArgs '/elevated'
+
+$d2 = Join-Path $work 'dbg2.bat'
+[System.IO.File]::WriteAllText($d2,
+    $dbgText.Replace($marker, $marker + "`r`ncall :NORM`r`necho NORMED=[%choice%]`r`nexit /b"), $gbk)
+Test-Case -Name '调试2 过完 :NORM 之后看值' -Bat $d2 `
+          -InputText "11`n" -Contain @('NORMED=[11]') -BatArgs '/elevated'
+
+$d3 = Join-Path $work 'dbg3.bat'
+[System.IO.File]::WriteAllText($d3,
+    $dbgText.Replace($marker, $marker + "`r`nif defined choice (echo DEF=1) else (echo DEF=0)`r`nexit /b"), $gbk)
+Test-Case -Name '调试3 set /p 之后变量是否已定义' -Bat $d3 `
+          -InputText "11`n" -Contain @('DEF=1') -BatArgs '/elevated'
+
 
 # 功能执行时都会先打一条横线包起来的标题, 用它当断言标记,
 # 免得匹配到菜单里的同名文字造成「假通过」
