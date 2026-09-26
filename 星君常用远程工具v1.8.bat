@@ -1,6 +1,6 @@
 @echo off
 :: ============================================================
-::  星君常用远程工具 v1.7
+::  星君常用远程工具 v1.8
 ::  作者  : 星君 (Xingjun)  |  gp45.ys168.com
 ::  许可  : MIT License    |  更新日期: 2026-09-26
 ::  声明  : 本工具仅修改本机配置, 部分功能需管理员权限,
@@ -8,17 +8,49 @@
 :: ============================================================
 setlocal EnableExtensions
 chcp 936 >nul 2>&1
-title 星君常用远程工具 v1.7  -  作者: 星君
+title 星君常用远程工具 v1.8  -  作者: 星君
 color 0A
 
 set "EXPORT_DIR=%~dp0导出"
 if not exist "%EXPORT_DIR%" mkdir "%EXPORT_DIR%" >nul 2>&1
 set "UAC_REG=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+set "BADCNT=0"
+
+:: ---------------- 启动: 自动请求管理员权限 ----------------
+:: 带 /elevated 参数说明是提权后重启的实例, 不再重复请求, 避免反复弹窗
+:: 路径通过环境变量 SELF 传给 PowerShell, 免得路径里的引号把命令打断
+if /i "%~1"=="/elevated" goto MENU
+
+call :CHECK_ADMIN
+if "%IS_ADMIN%"=="1" goto MENU
+
+cls
+echo ========================================================
+echo    需要管理员权限
+echo ========================================================
+echo.
+echo   本工具有 10 项功能需要管理员权限, 现在尝试提权。
+echo.
+echo   - 在弹出的 UAC 窗口里点「是」, 会在新窗口以管理员身份重新打开本工具
+echo   - 点「否」则以普通权限继续, 需要管理员的功能会提示权限不足
+echo.
+set "SELF=%~f0"
+powershell -NoProfile -Command "try { Start-Process -FilePath $env:SELF -ArgumentList '/elevated' -Verb RunAs -ErrorAction Stop } catch { exit 1 }"
+if not errorlevel 1 (
+    echo   已在管理员窗口重新打开, 这个窗口马上关闭...
+    timeout /t 2 >nul
+    exit /b 0
+)
+echo   [!] 没有拿到管理员权限, 以普通权限继续。
+echo       想用需要管理员的功能, 请关掉本窗口后重新运行, 并在 UAC 弹窗里点「是」。
+echo.
+pause
+goto MENU
 
 :MENU
 cls
 echo ========================================================
-echo    [星君] gp45.ys168.com  常用远程工具 v1.7
+echo    [星君] gp45.ys168.com  常用远程工具 v1.8
 echo    ---  网络 / 防火墙 / 系统 / UAC / 桌面管理  ---
 echo    作者: 星君 (Xingjun)  |  License: MIT
 echo ========================================================
@@ -98,6 +130,13 @@ if "%choice%"=="26" goto RESTORE_ALL
 if "%choice%"=="0"  goto QUIT
 echo.
 echo   无效输入, 请输入 0-26 的序号。
+set /a BADCNT+=1
+if %BADCNT% GEQ 5 (
+    echo.
+    echo   连续 5 次无效输入, 自动退出。
+    timeout /t 2 >nul
+    goto QUIT
+)
 timeout /t 2 >nul
 goto MENU
 
@@ -139,7 +178,7 @@ cls
 call :CHECK_ADMIN
 if "%IS_ADMIN%"=="0" (
     echo   [!] 未检测到管理员权限, 部分操作会失败。
-    echo       请右键本文件 - 以管理员身份运行。
+    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
     echo.
     pause
     goto MENU
@@ -202,7 +241,7 @@ cls
 call :CHECK_ADMIN
 if "%IS_ADMIN%"=="0" (
     echo   [!] 开关防火墙需要管理员权限。
-    echo       请右键本文件 - 以管理员身份运行。
+    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
     echo.
     pause
     goto MENU
@@ -210,9 +249,9 @@ if "%IS_ADMIN%"=="0" (
 echo -------------------- 开启防火墙 --------------------
 echo   将开启全部配置文件 [域 / 专用 / 公用] 的防火墙。
 echo.
-set "sure="
-set /p sure=确认开启请输入 Y, 其他键取消: 
-if /i not "%sure%"=="Y" (
+choice /c YN /n /m "确认开启全部配置文件防火墙? [Y=开启 / N=取消] "
+echo.
+if errorlevel 2 (
     echo   已取消。
     goto DONE
 )
@@ -232,7 +271,7 @@ cls
 call :CHECK_ADMIN
 if "%IS_ADMIN%"=="0" (
     echo   [!] 开关防火墙需要管理员权限。
-    echo       请右键本文件 - 以管理员身份运行。
+    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
     echo.
     pause
     goto MENU
@@ -241,9 +280,9 @@ echo -------------------- 关闭防火墙 --------------------
 echo   [!] 将关闭全部配置文件的防火墙, 系统将对入站连接不设防。
 echo       若只是某个程序被拦, 建议改用功能 12 放行端口。
 echo.
-set "sure="
-set /p sure=确认关闭请输入 OFF, 其他键取消: 
-if /i not "%sure%"=="OFF" (
+choice /c YN /n /m "确认关闭全部配置文件防火墙? [Y=关闭 / N=取消] "
+echo.
+if errorlevel 2 (
     echo   已取消。
     goto DONE
 )
@@ -265,7 +304,7 @@ cls
 call :CHECK_ADMIN
 if "%IS_ADMIN%"=="0" (
     echo   [!] 放行端口需要管理员权限。
-    echo       请右键本文件 - 以管理员身份运行。
+    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
     echo.
     pause
     goto MENU
@@ -346,9 +385,9 @@ echo.
 echo   该 PID 对应的进程:
 tasklist /fi "PID eq %pid%"
 echo.
-set "sure="
-set /p sure=确认强制结束该进程? 输入 Y 确认, 其他键取消: 
-if /i not "%sure%"=="Y" (
+choice /c YN /n /m "确认强制结束上面列出的进程? [Y=结束 / N=取消] "
+echo.
+if errorlevel 2 (
     echo   已取消。
     goto DONE
 )
@@ -420,7 +459,7 @@ cls
 call :CHECK_ADMIN
 if "%IS_ADMIN%"=="0" (
     echo   [!] 禁用系统更新需要管理员权限。
-    echo       请右键本文件 - 以管理员身份运行。
+    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
     echo.
     pause
     goto MENU
@@ -452,7 +491,7 @@ cls
 call :CHECK_ADMIN
 if "%IS_ADMIN%"=="0" (
     echo   [!] 启用系统更新需要管理员权限。
-    echo       请右键本文件 - 以管理员身份运行。
+    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
     echo.
     pause
     goto MENU
@@ -482,7 +521,7 @@ cls
 call :CHECK_ADMIN
 if "%IS_ADMIN%"=="0" (
     echo   [!] 修改 UAC 需要管理员权限。
-    echo       请右键本文件 - 以管理员身份运行。
+    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
     echo.
     pause
     goto MENU
@@ -495,9 +534,9 @@ echo       1. 所有程序将静默获得管理员权限, 无任何拦截。
 echo       2. 商店 / UWP 应用大概率打不开, 属正常现象。
 echo       3. 用完请及时用功能 22 恢复启用。
 echo.
-set "sure="
-set /p sure=确认禁用请输入 Y, 其他键取消: 
-if /i not "%sure%"=="Y" (
+choice /c YN /n /m "确认禁用 UAC 提权弹窗? [Y=禁用 / N=取消] "
+echo.
+if errorlevel 2 (
     echo   已取消。
     goto DONE
 )
@@ -519,7 +558,7 @@ cls
 call :CHECK_ADMIN
 if "%IS_ADMIN%"=="0" (
     echo   [!] 修改 UAC 需要管理员权限。
-    echo       请右键本文件 - 以管理员身份运行。
+    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
     echo.
     pause
     goto MENU
@@ -559,7 +598,7 @@ cls
 call :CHECK_ADMIN
 if "%IS_ADMIN%"=="0" (
     echo   [!] 去除快捷方式箭头需要管理员权限。
-    echo       请右键本文件 - 以管理员身份运行。
+    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
     echo.
     pause
     goto MENU
@@ -591,7 +630,7 @@ cls
 call :CHECK_ADMIN
 if "%IS_ADMIN%"=="0" (
     echo   [!] 恢复快捷方式箭头需要管理员权限。
-    echo       请右键本文件 - 以管理员身份运行。
+    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
     echo.
     pause
     goto MENU
@@ -622,7 +661,7 @@ cls
 call :CHECK_ADMIN
 if "%IS_ADMIN%"=="0" (
     echo   [!] 还原全部改动需要管理员权限。
-    echo       请右键本文件 - 以管理员身份运行。
+    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
     echo.
     pause
     goto MENU
@@ -638,9 +677,9 @@ echo     5. 放行规则     删除所有名为 星君放行_* 的入站规则
 echo.
 echo   不会动的: 导出的网络配置文件 [导出 目录]
 echo.
-set "sure="
-set /p sure=确认全部还原? 输入 Y 确认, 其他键取消: 
-if /i not "%sure%"=="Y" (
+choice /c YN /n /m "确认还原上面列出的全部改动? [Y=还原 / N=取消] "
+echo.
+if errorlevel 2 (
     echo   已取消。
     goto DONE
 )
@@ -784,6 +823,7 @@ if not errorlevel 1 set "IS_ADMIN=1"
 exit /b
 
 :DONE
+set "BADCNT=0"
 echo.
 echo --------------------------------------------------------
 pause
@@ -792,7 +832,7 @@ goto MENU
 :QUIT
 cls
 echo ========================================================
-echo    星君常用远程工具 v1.7
+echo    星君常用远程工具 v1.8
 echo    作者: 星君 (Xingjun)  |  License: MIT
 echo    感谢使用, 再见。
 echo ========================================================

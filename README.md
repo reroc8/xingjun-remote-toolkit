@@ -10,8 +10,9 @@
 [![Platform](https://img.shields.io/badge/platform-Windows%2010%20%7C%2011-0078D6.svg)](#兼容性)
 [![Release](https://img.shields.io/github/v/release/reroc8/xingjun-remote-toolkit?label=release&color=2ea44f)](https://github.com/reroc8/xingjun-remote-toolkit/releases/latest)
 [![Downloads](https://img.shields.io/github/downloads/reroc8/xingjun-remote-toolkit/total?label=downloads&color=2ea44f)](https://github.com/reroc8/xingjun-remote-toolkit/releases)
+[![测试](https://github.com/reroc8/xingjun-remote-toolkit/actions/workflows/test.yml/badge.svg)](https://github.com/reroc8/xingjun-remote-toolkit/actions/workflows/test.yml)
 
-[下载](#下载) · [使用方法](#使用方法) · [功能一览](#功能一览) · [改动与还原](#改动与还原) · [注意事项](#注意事项) · [已知限制](#已知限制) · [常见问题](#常见问题)
+[下载](#下载) · [使用方法](#使用方法) · [功能一览](#功能一览) · [改动与还原](#改动与还原) · [注意事项](#注意事项) · [已知限制](#已知限制) · [常见问题](#常见问题) · [开发与测试](#开发与测试)
 
 </div>
 
@@ -38,6 +39,8 @@
 |---|---|
 | `XingjunRemoteTool-v1.7.bat` | `星君常用远程工具v1.7.bat` |
 
+> **注意**：仓库主分支现在是 **v1.8 开发版**，还没有发版。要稳定版请从上面的 Releases 链接下载 v1.7。
+>
 > 两个名字是同一个文件，内容完全一致（SHA256 相同）。
 > GitHub 的 Release 附件名不支持中文，会被自动简化，所以附件用了英文名，
 > 中文说明显示在附件的标签上。介意文件名的话，直接下载仓库里那份也是同一个东西。
@@ -59,8 +62,8 @@ certutil -hashfile XingjunRemoteTool-v1.7.bat SHA256
 ## 使用方法
 
 1. 把 `.bat` 文件放到桌面或任意目录。程序会在**同目录**下自动建一个 `导出` 文件夹，用来放导出的文本报告。
-2. 双击运行。
-   **需要管理员权限的功能，请右键 → 以管理员身份运行**，否则程序会提示权限不足并拒绝执行。
+2. 双击运行。程序会**自动弹出 UAC 提权窗口**，点「是」就会以管理员身份重新打开（有 10 项功能需要）。
+   点「否」也能继续用，只是需要管理员的功能会提示权限不足。
 3. 按菜单提示输入序号后回车。功能执行完会停在结果页，按任意键回到菜单。
 4. 输入 `0` 退出。
 
@@ -72,7 +75,7 @@ certutil -hashfile XingjunRemoteTool-v1.7.bat SHA256
 菜单里带 `[需管理员]` 标记的都需要，一共 10 个：**10、11、12、19、20、21、22、24、25、26**。
 另外 **功能 5**（刷新 DNS 重获 IP）菜单里没标，但同样需要 —— 因为 `ipconfig /release` 要求提权。
 
-不想每次都右键的话，可以给这个 `.bat` 建一个快捷方式，在快捷方式的属性里勾上「以管理员身份运行」。
+程序启动时会自动请求提权，不用手动右键。
 
 ---
 
@@ -168,7 +171,8 @@ certutil -hashfile XingjunRemoteTool-v1.7.bat SHA256
 **用前请读。** 下面每一条都对应一个会真的发生的问题。
 
 1. **本工具只修改本机配置，不联网、不上传任何数据。** 所有操作都是调用 Windows 自带命令（`ipconfig` / `netsh` / `reg` / `sc` / `schtasks` / `taskkill` 等）完成的，脚本内容可以直接用记事本打开逐行核对。
-2. **改配置类功能请务必看清提示再确认。** 关闭防火墙、禁用系统更新、禁用 UAC 这类操作会降低系统安全性，程序在每一步都做了二次确认（要求输入 `Y` / `OFF` 等），不要习惯性回车。
+2. **改配置类功能请务必看清提示再确认。** 关闭防火墙、禁用系统更新、禁用 UAC 这类操作会降低系统安全性，程序每一步都要你明确按 `Y` 才会执行，按 `N` 取消。
+   确认用的是 `choice`，**回车不会当成确认** —— 这一点比早期版本安全（早期用 `set /p`，直接回车会残留上一次的输入）。
 3. **禁用 UAC 有副作用。** `EnableLUA` 设为 0 后，所有程序都会静默获得管理员权限且无任何拦截，同时微软商店 / UWP 应用大概率打不开。这是禁用 UAC 的固有现象，不是本工具的问题。用完请及时用功能 22 恢复。
 4. **改 UAC 和系统更新需要重启才生效。**
 5. **功能 13 结束进程是不可逆的。** 确认前程序会列出 PID 对应的进程名，请确认无误再输入 `Y`。系统关键进程被结束后可能导致蓝屏或需要重启。
@@ -226,8 +230,11 @@ A：可能会。因为脚本会调用 `reg add`、`taskkill` 这类命令，行�
 
 | 文件 | 说明 |
 |---|---|
-| `星君常用远程工具v1.7.bat` | 主程序。GBK 编码 + CRLF 换行，可直接用记事本编辑 |
+| `星君常用远程工具v1.8.bat` | 主程序（主分支为开发版）。GBK 编码 + CRLF 换行，可直接用记事本编辑 |
 | `assets/menu-preview.svg` | README 顶部的界面预览图 |
+| `tests/check_bat.py` | 静态检查：编码、换行、悬空跳转、括号配对、`set /p` 残留值 |
+| `tests/run-tests.ps1` | Windows 冒烟测试：在真机跑脚本并断言输出 |
+| `.github/workflows/test.yml` | 每次推送自动跑上面两项 |
 | `CHANGELOG.md` | 版本变更记录 |
 | `LICENSE` | MIT 许可 |
 
@@ -235,7 +242,53 @@ A：可能会。因为脚本会调用 `reg add`、`taskkill` 这类命令，行�
 
 ---
 
+## 开发与测试
+
+改完脚本推上去，GitHub Actions 会自动在**真实 Windows** 上跑一遍。
+
+### 本机可以先跑的静态检查
+
+不需要 Windows，macOS / Linux 上都能跑：
+
+```bash
+python3 tests/check_bat.py
+```
+
+检查这几类问题，都是实际踩过的坑：
+
+| 检查项 | 为什么 |
+|---|---|
+| 能否按 GBK 解码 | 中文不乱码的前提 |
+| 换行是否纯 CRLF | 混入裸 LF 会让 cmd 解析异常 |
+| 有没有悬空跳转 | `goto` / `call` 的目标标签必须存在 |
+| 括号是否配对 | 少一个右括号会让整段逻辑错位 |
+| `set /p` 前是否清空了变量 | **`set /p` 在直接回车时不清空变量**，旧值残留会被误判成确认 |
+| 版本号是否一致 | 版本号散落在头部/标题/菜单/退出页，容易漏改 |
+
+> 这个脚本本身用故意注入的错误验证过：7 类问题都能准确报出来。
+
+### Windows 上的冒烟测试
+
+```powershell
+powershell -ExecutionPolicy Bypass -File tests\run-tests.ps1
+```
+
+会真的运行脚本、喂入按键序列、断言输出。**只测不会改动系统的路径**，或者「确认时按取消」的路径。
+覆盖：菜单渲染、无效输入、全角数字与空格归一化、只读功能、确认提示的 Y / N 两个分支。
+
+同时会单独验证 `choice` 能读管道输入 —— 所有确认提示都依赖这一点。
+
+---
+
 ## 版本历史
+
+### v1.8 —— 开发中，尚未发版
+
+- **改用 `choice` 做确认** —— 不再用 `set /p` 读确认。`choice` 不产生变量，从根上消灭了「上一次的输入残留下来被当成确认」这类问题；而且**回车不会当成确认**，必须明确按键
+- **启动时自动请求管理员权限** —— 不用再手动右键。点「否」则以普通权限继续，需要管理员的功能会提示
+- **加了自动化测试** —— `tests/check_bat.py` 静态检查 + `tests/run-tests.ps1` 在真实 Windows 上跑冒烟测试，每次推送由 GitHub Actions 自动执行
+- **加了连续无效输入保护** —— 连续 5 次输错自动退出，避免输入被重定向到空文件时菜单空转
+- 权限不足时的提示文案改为「重新运行并在 UAC 弹窗里点『是』」，与自动提权保持一致
 
 ### v1.7（2026-09-26）
 

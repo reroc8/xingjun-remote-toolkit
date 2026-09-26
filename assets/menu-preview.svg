@@ -3,12 +3,12 @@
   <rect x="0" y="0" width="953" height="40" rx="12" fill="#151B16"/>
   <rect x="0" y="28" width="953" height="12" fill="#151B16"/>
   <line x1="0" y1="40" x2="953" y2="40" stroke="#233027" stroke-width="1"/>
-  <text x="20" y="24" font-size="12.5" fill="#9DB0A2" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">▸ 星君常用远程工具 v1.7  —  cmd.exe</text>
+  <text x="20" y="24" font-size="12.5" fill="#9DB0A2" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">▸ 星君常用远程工具 v1.8  —  cmd.exe</text>
   <text x="933" y="24" text-anchor="end" font-size="12.5" fill="#7C8C81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">—</text>
   <text x="913" y="24" text-anchor="end" font-size="12.5" fill="#7C8C81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">▢</text>
   <text x="893" y="24" text-anchor="end" font-size="12.5" fill="#7C8C81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">✕</text>
   <text x="26.0" y="74.0" fill="#5AF78E" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">========================================================</text>
-  <text x="26.0" y="95.0" fill="#5AF78E" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">   [星君] gp45.ys168.com  常用远程工具 v1.7</text>
+  <text x="26.0" y="95.0" fill="#5AF78E" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">   [星君] gp45.ys168.com  常用远程工具 v1.8</text>
   <text x="26.0" y="116.0" fill="#5AF78E" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">   ---  网络 / 防火墙 / 系统 / UAC / 桌面管理  ---</text>
   <text x="26.0" y="137.0" fill="#5AF78E" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">   作者: 星君 (Xingjun)  |  License: MIT</text>
   <text x="26.0" y="158.0" fill="#5AF78E" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">========================================================</text>
