@@ -165,7 +165,7 @@ Test-Case -Name 'choice 能读管道输入 (按 N)' -Bat $choiceBat `
 # ---------------------------------------------------------------- 主脚本用例
 # 每个用例的输入都以 0 收尾, 保证脚本一定会退出, 不会空转
 # ---------------------------------------------------------------- 探针
-# 用最小例子确认 cmd 的输入行为 —— 这些坑会直接影响测试怎么写
+# 逐项加变量, 定位到底哪一步让 set /p 读到空
 $mkProbe = {
     param([string]$File, [string[]]$Body)
     [System.IO.File]::WriteAllText($File, (('@echo off') + "`r`n" + ($Body -join "`r`n") + "`r`n"),
@@ -173,27 +173,45 @@ $mkProbe = {
     return $File
 }
 
-# a) set /p 能不能读重定向的输入
 $p1 = & $mkProbe (Join-Path $work 'p1.bat') @(
-    'set "x="', 'set /p x=pick: ', 'if "%x%"=="3" (echo MATCH) else (echo NOMATCH)')
-Test-Case -Name '探针 set /p 能读重定向输入' -Bat $p1 -InputText "3`n" -Contain @('MATCH')
+    'set "x="', 'set /p x=pick: ', 'if "%x%"=="11" (echo MATCH) else (echo NOMATCH)')
+Test-Case -Name '探针1 基线 ASCII 提示' -Bat $p1 -InputText "11`n" -Contain @('MATCH')
 
-# b) powershell 会不会把重定向的输入吃掉
 $p2 = & $mkProbe (Join-Path $work 'p2.bat') @(
-    'powershell -NoProfile -Command "exit 0" >nul 2>&1',
-    'set "x="', 'set /p x=pick: ', 'if "%x%"=="3" (echo MATCH) else (echo NOMATCH)')
-Test-Case -Name '探针 powershell 不吃重定向输入' -Bat $p2 -InputText "3`n" -Contain @('MATCH')
+    'chcp 936 >nul 2>&1', 'set "x="', 'set /p x=pick: ',
+    'if "%x%"=="11" (echo MATCH) else (echo NOMATCH)')
+Test-Case -Name '探针2 加了 chcp 936' -Bat $p2 -InputText "11`n" -Contain @('MATCH')
 
-# c) pause 会不会把重定向的输入吃掉
 $p3 = & $mkProbe (Join-Path $work 'p3.bat') @(
-    'pause >nul', 'set "x="', 'set /p x=pick: ',
-    'if "%x%"=="3" (echo MATCH) else (echo NOMATCH)')
-Test-Case -Name '探针 pause 不吃重定向输入' -Bat $p3 -InputText "9`n3`n" -Contain @('MATCH')
+    'set "x="', 'set /p x=请输入序号后回车: ',
+    'if "%x%"=="11" (echo MATCH) else (echo NOMATCH)')
+Test-Case -Name '探针3 中文提示' -Bat $p3 -InputText "11`n" -Contain @('MATCH')
 
+$p4 = & $mkProbe (Join-Path $work 'p4.bat') @(
+    'chcp 936 >nul 2>&1', 'title t', 'color 0A',
+    'set "x="', 'set /p x=请输入序号后回车: ',
+    'if "%x%"=="11" (echo MATCH) else (echo NOMATCH)')
+Test-Case -Name '探针4 中文提示+chcp+title+color' -Bat $p4 -InputText "11`n" -Contain @('MATCH')
+
+$p6 = & $mkProbe (Join-Path $work 'p6.bat') @(
+    'cls', 'set "x="', 'set /p x=pick: ',
+    'if "%x%"=="11" (echo MATCH) else (echo NOMATCH)')
+Test-Case -Name '探针6 加了 cls' -Bat $p6 -InputText "11`n" -Contain @('MATCH')
+
+# 用真实脚本里的 :NORM 段落, 看它会不会把输入改坏
+$toolText = [System.IO.File]::ReadAllText($tool, $gbk)
+$nm = [regex]::Match($toolText, "(?s):NORM\r\n.*?\r\nexit /b\r\n")
+Write-Host "  [信息] 提取到 NORM 段 $($nm.Value.Length) 字符"
+$p5body = @('@echo off', 'set "x="', 'set /p x=pick: ', 'call :NORM',
+            'echo VALUE=[%x%]',
+            'if "%x%"=="11" (echo MATCH) else (echo NOMATCH)') + ($nm.Value -split "`r`n")
+$p5 = & $mkProbe (Join-Path $work 'p5.bat') $p5body
+Test-Case -Name '探针5 真实 :NORM 段' -Bat $p5 -InputText "11`n" -Contain @('MATCH')
 
 # 功能执行时都会先打一条横线包起来的标题, 用它当断言标记,
 # 免得匹配到菜单里的同名文字造成「假通过」
-$T = '-------------------- '
+$TL = '-------------------- '   # 左: 横线 + 空格
+$TR = ' --------------------'   # 右: 空格 + 横线
 
 Test-Case -Name '菜单能显示并正常退出' `
           -InputText "0`n0`n0`n" -BatArgs '/elevated' `
@@ -210,27 +228,27 @@ Test-Case -Name '无效输入有提示' `
 
 Test-Case -Name '半角序号可用 (功能 3)' `
           -InputText "3`n0`n0`n" -BatArgs '/elevated' `
-          -Contain @("${T}默认网关与 DNS 服务器${T}")
+          -Contain @("${TL}默认网关与 DNS 服务器${TR}")
 
 Test-Case -Name '全角序号 ２ 自动转半角 (功能 2)' `
           -InputText "２`n0`n0`n" -BatArgs '/elevated' `
-          -Contain @("${T}IP 地址与子网掩码${T}")
+          -Contain @("${TL}IP 地址与子网掩码${TR}")
 
 Test-Case -Name '全角两位数 ２３ 自动转半角 (功能 23)' `
           -InputText "２３`n0`n0`n" -BatArgs '/elevated' `
-          -Contain @("${T}当前 UAC 状态${T}")
+          -Contain @("${TL}当前 UAC 状态${TR}")
 
 Test-Case -Name '序号前后空格被忽略 (功能 2)' `
           -InputText "  2  `n0`n0`n" -BatArgs '/elevated' `
-          -Contain @("${T}IP 地址与子网掩码${T}")
+          -Contain @("${TL}IP 地址与子网掩码${TR}")
 
 Test-Case -Name '只读功能 9 防火墙状态' `
           -InputText "9`n0`n0`n" -BatArgs '/elevated' `
-          -Contain @("${T}防火墙状态${T}")
+          -Contain @("${TL}防火墙状态${TR}")
 
 Test-Case -Name '只读功能 23 UAC 状态' `
           -InputText "23`n0`n0`n" -BatArgs '/elevated' `
-          -Contain @("${T}当前 UAC 状态${T}", 'EnableLUA')
+          -Contain @("${TL}当前 UAC 状态${TR}", 'EnableLUA')
 
 Test-Case -Name '确认提示按 N 走取消分支 (不改系统)' -NeedsAdmin `
           -InputText "11`nN`n0`n0`n" -BatArgs '/elevated' `
