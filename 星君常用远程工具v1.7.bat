@@ -14,6 +14,7 @@ color 0A
 set "EXPORT_DIR=%~dp0导出"
 if not exist "%EXPORT_DIR%" mkdir "%EXPORT_DIR%" >nul 2>&1
 set "UAC_REG=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
+set "BADCNT=0"
 
 :MENU
 cls
@@ -98,6 +99,13 @@ if "%choice%"=="26" goto RESTORE_ALL
 if "%choice%"=="0"  goto QUIT
 echo.
 echo   无效输入, 请输入 0-26 的序号。
+set /a BADCNT+=1
+if %BADCNT% GEQ 5 (
+    echo.
+    echo   连续 5 次无效输入, 自动退出。
+    timeout /t 2 >nul
+    goto QUIT
+)
 timeout /t 2 >nul
 goto MENU
 
@@ -784,6 +792,7 @@ if not errorlevel 1 set "IS_ADMIN=1"
 exit /b
 
 :DONE
+set "BADCNT=0"
 echo.
 echo --------------------------------------------------------
 pause

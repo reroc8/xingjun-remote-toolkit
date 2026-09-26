@@ -108,6 +108,8 @@ function Invoke-Bat {
     $p = Start-Process -FilePath $env:ComSpec -ArgumentList '/c', $runF `
                        -PassThru -NoNewWindow -WorkingDirectory $work
     if (-not $p.WaitForExit($TimeoutSec * 1000)) {
+        # 连子进程一起杀, 否则脚本里的死循环会留下来继续跑, 影响后面的用例
+        try { & taskkill.exe /F /T /PID $p.Id | Out-Null } catch { }
         try { $p.Kill() } catch { }
         return [pscustomobject]@{ TimedOut = $true; Output = ''; ExitCode = -1; OutFile = $outF }
     }
