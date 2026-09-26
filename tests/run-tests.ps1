@@ -206,6 +206,9 @@ $toolSrc = [System.IO.File]::ReadAllText($ScriptPath, $gbk)
 $ver = [regex]::Match($toolSrc, '星君常用远程工具 (v[\d.]+)').Groups[1].Value
 $hasRestore = $toolSrc.Contains('还原全部改动')
 $hasFixMenu = $toolSrc.Contains('重建图标缓存')
+$hasLockMenu = $toolSrc.Contains('禁止锁屏与休眠')
+# 主菜单的无效输入提示里写了序号范围, 从文件里读出来, 免得版本一变断言就过期
+$mainRange = [regex]::Match($toolSrc, '无效输入, 请输入 0-(\d+)').Groups[1].Value
 Write-Host "版本     : $ver" 
 
 Write-Host "被测脚本 : $ScriptPath"
@@ -290,13 +293,14 @@ Test-Case -Name '菜单能显示并正常退出' `
 
 $menuItems = @('1   查看完整网络配置', '13   端口占用排查', '0   退出')
 if ($hasRestore) { $menuItems += '26   还原全部改动' }
+if ($hasLockMenu) { $menuItems += '28   禁止锁屏与休眠' }
 Test-Case -Name '菜单列出全部条目' `
           -InputText "0`n0`n" -BatArgs '/elevated' `
           -Contain $menuItems
 
 Test-Case -Name '无效输入有提示' `
           -InputText "99`n0`n0`n" -BatArgs '/elevated' `
-          -Contain @('无效输入, 请输入 0-26 的序号。')
+          -Contain @("无效输入, 请输入 0-$mainRange 的序号。")
 
 Test-Case -Name '半角序号可用 (功能 3)' `
           -InputText "3`n0`n0`n" -BatArgs '/elevated' `
@@ -332,6 +336,14 @@ Test-Case -Name '确认提示按 N 走取消分支 (不改系统)' -NeedsAdmin `
 # 所以只测「按 N 取消」这条不会改动系统的路径。
 # Y 分支的正确性由 check_bat.py 保证: 确认块必须是 choice 紧跟 if errorlevel。
 
+
+# 锁屏功能: 只走「按 N 取消」, 不真改电源设置
+if ($hasLockMenu) {
+    Test-Case -Name '功能 28 禁止锁屏按 N 会取消 (不改电源)' `
+              -InputText "28`nN`n0`n0`n" -BatArgs '/elevated' `
+              -Contain @('已取消。') `
+              -NotContain @('[1/5] 显示器永不关闭')
+}
 
 # 修复子菜单: 只验证「能打开、能返回」, 绝不真的执行修复动作
 # (SFC/DISM 会跑十几分钟, 而且会改系统)

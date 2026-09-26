@@ -103,6 +103,10 @@ echo.
 echo   [修复]
 echo   27   一键修复  [系统文件 / 系统映像 / 网络 / 图标缓存, 子菜单]
 echo.
+echo   [电源 / 锁屏]
+echo   28   禁止锁屏与休眠  [显示器不关 / 不睡眠 / 唤醒免密码, 需管理员]
+echo   29   恢复锁屏与休眠默认  [需管理员]
+echo.
 echo    0   退出
 echo.
 set "choice="
@@ -136,9 +140,11 @@ if "%choice%"=="24" goto ARROW_OFF
 if "%choice%"=="25" goto ARROW_ON
 if "%choice%"=="26" goto RESTORE_ALL
 if "%choice%"=="27" goto FIX_MENU
+if "%choice%"=="28" goto LOCK_OFF
+if "%choice%"=="29" goto LOCK_ON
 if "%choice%"=="0"  goto QUIT
 echo.
-echo   无效输入, 请输入 0-27 的序号。
+echo   无效输入, 请输入 0-29 的序号。
 set /a BADCNT+=1
 if %BADCNT% GEQ 5 (
     echo.
@@ -749,14 +755,6 @@ goto DONE
 
 :FIX_MENU
 cls
-call :CHECK_ADMIN
-if "%IS_ADMIN%"=="0" (
-    echo   [!] 修复功能需要管理员权限。
-    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
-    echo.
-    pause
-    goto MENU
-)
 echo -------------------- 一键修复 --------------------
 echo   适用: 电脑卡顿 / 蓝屏 / 更新报错 / 上不了网 / 图标变白。
 echo   全部调用 Windows 自带命令, 不联网、不装东西。
@@ -777,12 +775,25 @@ set "choice="
 set /p choice=请输入序号后回车: 
 call :NORM
 
+if "%choice%"=="0" goto MENU
+
+:: 权限检查放在读取之后 —— 一是「只看菜单」不该要求管理员,
+:: 二是 call 子程序之后紧跟 set /p 会读不到重定向输入
+call :CHECK_ADMIN
+if "%IS_ADMIN%"=="0" (
+    echo.
+    echo   [!] 修复功能需要管理员权限。
+    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
+    echo.
+    pause
+    goto DONE
+)
+
 if "%choice%"=="1" goto FIX_ALL
 if "%choice%"=="2" goto FIX_SFC
 if "%choice%"=="3" goto FIX_DISM
 if "%choice%"=="4" goto FIX_NET
 if "%choice%"=="5" goto FIX_ICON
-if "%choice%"=="0" goto MENU
 echo.
 echo   无效输入, 请输入 0-5 的序号。
 timeout /t 2 >nul
@@ -913,6 +924,102 @@ del /a /f "%LocalAppData%\Microsoft\Windows\Explorer\iconcache*" >nul 2>&1
 echo   正在重启资源管理器...
 start explorer.exe
 exit /b
+
+:: ---------------- 电源 / 锁屏 ----------------
+
+:LOCK_OFF
+cls
+call :CHECK_ADMIN
+if "%IS_ADMIN%"=="0" (
+    echo   [!] 改电源设置需要管理员权限。
+    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
+    echo.
+    pause
+    goto MENU
+)
+echo -------------------- 禁止锁屏与休眠 --------------------
+echo   适用: 远程协助时不想让对方电脑锁屏 / 挂机跑任务 / 长时间看东西。
+echo.
+echo   将做这些改动:
+echo     1. 显示器永不自动关闭
+echo     2. 电脑永不自动睡眠
+echo     3. 关闭屏幕保护
+echo     4. 唤醒时不再要求输入密码
+echo     5. 取消系统层面的「无操作自动锁屏」限制
+echo.
+echo   注意: 这样电脑会一直耗电、屏幕常亮, 用完记得用功能 29 恢复。
+echo.
+set "sure="
+choice /c YN /n /m "确认执行? [Y=执行 / N=取消] "
+if errorlevel 2 (
+    echo.
+    echo   已取消。
+    goto DONE
+)
+echo.
+echo   [1/5] 显示器永不关闭...
+powercfg /change monitor-timeout-ac 0
+powercfg /change monitor-timeout-dc 0
+echo   [2/5] 电脑永不睡眠...
+powercfg /change standby-timeout-ac 0
+powercfg /change standby-timeout-dc 0
+echo   [3/5] 关闭屏幕保护...
+reg add "HKCU\Control Panel\Desktop" /v ScreenSaveActive /t REG_SZ /d 0 /f >nul 2>&1
+reg add "HKCU\Control Panel\Desktop" /v ScreenSaverIsSecure /t REG_SZ /d 0 /f >nul 2>&1
+echo   [4/5] 唤醒时不要求密码...
+powercfg /SETACVALUEINDEX SCHEME_CURRENT SUB_NONE CONSOLELOCK 0 >nul 2>&1
+powercfg /SETDCVALUEINDEX SCHEME_CURRENT SUB_NONE CONSOLELOCK 0 >nul 2>&1
+powercfg /S SCHEME_CURRENT >nul 2>&1
+echo   [5/5] 取消无操作自动锁屏限制...
+reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v InactivityTimeoutSecs /t REG_DWORD /d 0 /f >nul 2>&1
+echo.
+echo   完成。
+echo   提示: 如果屏幕保护是被组策略强制的, 这里可能改不动。
+echo   部分笔记本在电池模式下还有厂商自己的省电策略, 会盖过这里的设置。
+goto DONE
+
+:LOCK_ON
+cls
+call :CHECK_ADMIN
+if "%IS_ADMIN%"=="0" (
+    echo   [!] 改电源设置需要管理员权限。
+    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
+    echo.
+    pause
+    goto MENU
+)
+echo -------------------- 恢复锁屏与休眠默认 --------------------
+echo   将恢复为 Windows 常见的默认值:
+echo     - 显示器 10 分钟自动关闭 [电池 5 分钟]
+echo     - 电脑 30 分钟自动睡眠   [电池 15 分钟]
+echo     - 唤醒时要求输入密码
+echo     - 无操作自动锁屏限制 恢复为 15 分钟
+echo.
+echo   如果想让系统自己管, 也可以在「电源选项」里选回「平衡」计划。
+echo.
+set "sure="
+choice /c YN /n /m "确认恢复? [Y=恢复 / N=取消] "
+if errorlevel 2 (
+    echo.
+    echo   已取消。
+    goto DONE
+)
+echo.
+echo   [1/4] 显示器 10 分钟自动关闭...
+powercfg /change monitor-timeout-ac 10
+powercfg /change monitor-timeout-dc 5
+echo   [2/4] 电脑 30 分钟自动睡眠...
+powercfg /change standby-timeout-ac 30
+powercfg /change standby-timeout-dc 15
+echo   [3/4] 唤醒时要求输入密码...
+powercfg /SETACVALUEINDEX SCHEME_CURRENT SUB_NONE CONSOLELOCK 1 >nul 2>&1
+powercfg /SETDCVALUEINDEX SCHEME_CURRENT SUB_NONE CONSOLELOCK 1 >nul 2>&1
+powercfg /S SCHEME_CURRENT >nul 2>&1
+echo   [4/4] 无操作自动锁屏限制 恢复为 15 分钟...
+reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v InactivityTimeoutSecs /t REG_DWORD /d 900 /f >nul 2>&1
+echo.
+echo   完成。已恢复为常见的默认值。
+goto DONE
 
 :: ---------------- 公共子程序 ----------------
 

@@ -1,12 +1,12 @@
-<svg xmlns="http://www.w3.org/2000/svg" width="1004" height="768" viewBox="0 0 1004 768" role="img" aria-label="星君常用远程工具 v1.6 菜单界面">
-  <rect x="0" y="0" width="1004" height="768" rx="12" fill="#0B0F0C"/>
-  <rect x="0" y="0" width="1004" height="40" rx="12" fill="#151B16"/>
-  <rect x="0" y="28" width="1004" height="12" fill="#151B16"/>
-  <line x1="0" y1="40" x2="1004" y2="40" stroke="#233027" stroke-width="1"/>
+<svg xmlns="http://www.w3.org/2000/svg" width="1037" height="768" viewBox="0 0 1037 768" role="img" aria-label="星君常用远程工具 v1.6 菜单界面">
+  <rect x="0" y="0" width="1037" height="768" rx="12" fill="#0B0F0C"/>
+  <rect x="0" y="0" width="1037" height="40" rx="12" fill="#151B16"/>
+  <rect x="0" y="28" width="1037" height="12" fill="#151B16"/>
+  <line x1="0" y1="40" x2="1037" y2="40" stroke="#233027" stroke-width="1"/>
   <text x="20" y="24" font-size="12.5" fill="#9DB0A2" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">▸ 星君常用远程工具 v1.8  —  cmd.exe</text>
-  <text x="984" y="24" text-anchor="end" font-size="12.5" fill="#7C8C81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">—</text>
-  <text x="964" y="24" text-anchor="end" font-size="12.5" fill="#7C8C81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">▢</text>
-  <text x="944" y="24" text-anchor="end" font-size="12.5" fill="#7C8C81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">✕</text>
+  <text x="1017" y="24" text-anchor="end" font-size="12.5" fill="#7C8C81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">—</text>
+  <text x="997" y="24" text-anchor="end" font-size="12.5" fill="#7C8C81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">▢</text>
+  <text x="977" y="24" text-anchor="end" font-size="12.5" fill="#7C8C81" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">✕</text>
   <text x="26.0" y="74.0" fill="#5AF78E" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">========================================================</text>
   <text x="26.0" y="95.0" fill="#5AF78E" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">   [星君] gp45.ys168.com  常用远程工具 v1.8</text>
   <text x="26.0" y="116.0" fill="#5AF78E" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">   ---  网络 / 防火墙 / 系统 / UAC / 桌面管理  ---</text>
@@ -63,41 +63,49 @@
   <text x="60.8" y="631.0" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">检查远程桌面是否开启</text>
   <text x="48.8" y="652.0" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">18</text>
   <text x="60.8" y="652.0" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">查看磁盘剩余空间</text>
-  <rect x="506.8" y="174.0" width="3" height="21.0" rx="1.5" fill="#6BE7FF" opacity="0.7"/>
-  <text x="518.8" y="191.0" fill="#6BE7FF" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[系统更新]</text>
-  <text x="541.6" y="212.0" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">19</text>
-  <text x="553.6" y="212.0" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">禁用系统更新</text>
-  <text x="654.4" y="212.0" fill="#FFC857" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[需管理员]</text>
-  <text x="541.6" y="233.0" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">20</text>
-  <text x="553.6" y="233.0" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">启用系统更新</text>
-  <text x="654.4" y="233.0" fill="#FFC857" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[需管理员]</text>
-  <rect x="506.8" y="257.5" width="3" height="21.0" rx="1.5" fill="#6BE7FF" opacity="0.7"/>
-  <text x="518.8" y="274.5" fill="#6BE7FF" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[UAC 权限]</text>
-  <text x="541.6" y="295.5" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">21</text>
-  <text x="553.6" y="295.5" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">禁用 UAC 提权弹窗</text>
-  <text x="696.4" y="295.5" fill="#FFC857" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[需管理员, 重启生效]</text>
-  <text x="541.6" y="316.5" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">22</text>
-  <text x="553.6" y="316.5" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">启用 UAC 提权弹窗</text>
-  <text x="696.4" y="316.5" fill="#FFC857" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[需管理员, 重启生效]</text>
-  <text x="541.6" y="337.5" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">23</text>
-  <text x="553.6" y="337.5" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">查看当前 UAC 状态</text>
-  <rect x="506.8" y="362.0" width="3" height="21.0" rx="1.5" fill="#6BE7FF" opacity="0.7"/>
-  <text x="518.8" y="379.0" fill="#6BE7FF" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[桌面美化]</text>
-  <text x="541.6" y="400.0" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">24</text>
-  <text x="553.6" y="400.0" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">去除快捷方式小箭头</text>
-  <text x="696.4" y="400.0" fill="#FFC857" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[需管理员]</text>
-  <text x="541.6" y="421.0" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">25</text>
-  <text x="553.6" y="421.0" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">恢复快捷方式小箭头</text>
-  <text x="696.4" y="421.0" fill="#FFC857" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[需管理员]</text>
-  <rect x="506.8" y="445.5" width="3" height="21.0" rx="1.5" fill="#6BE7FF" opacity="0.7"/>
-  <text x="518.8" y="462.5" fill="#6BE7FF" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[维护]</text>
-  <text x="541.6" y="483.5" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">26</text>
-  <text x="553.6" y="483.5" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">还原全部改动</text>
-  <text x="654.4" y="483.5" fill="#FFC857" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[需管理员, 一键恢复防火墙/更新/UAC/箭头]</text>
-  <rect x="506.8" y="508.0" width="3" height="21.0" rx="1.5" fill="#6BE7FF" opacity="0.7"/>
-  <text x="518.8" y="525.0" fill="#6BE7FF" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[修复]</text>
-  <text x="541.6" y="546.0" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">27</text>
-  <text x="553.6" y="546.0" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">一键修复</text>
-  <text x="626.4" y="546.0" fill="#4FA97A" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[系统文件 / 系统映像 / 网络 / 图标缓存, 子菜单]</text>
+  <rect x="523.6" y="174.0" width="3" height="21.0" rx="1.5" fill="#6BE7FF" opacity="0.7"/>
+  <text x="535.6" y="191.0" fill="#6BE7FF" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[系统更新]</text>
+  <text x="558.4" y="212.0" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">19</text>
+  <text x="570.4" y="212.0" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">禁用系统更新</text>
+  <text x="671.2" y="212.0" fill="#FFC857" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[需管理员]</text>
+  <text x="558.4" y="233.0" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">20</text>
+  <text x="570.4" y="233.0" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">启用系统更新</text>
+  <text x="671.2" y="233.0" fill="#FFC857" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[需管理员]</text>
+  <rect x="523.6" y="257.5" width="3" height="21.0" rx="1.5" fill="#6BE7FF" opacity="0.7"/>
+  <text x="535.6" y="274.5" fill="#6BE7FF" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[UAC 权限]</text>
+  <text x="558.4" y="295.5" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">21</text>
+  <text x="570.4" y="295.5" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">禁用 UAC 提权弹窗</text>
+  <text x="713.2" y="295.5" fill="#FFC857" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[需管理员, 重启生效]</text>
+  <text x="558.4" y="316.5" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">22</text>
+  <text x="570.4" y="316.5" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">启用 UAC 提权弹窗</text>
+  <text x="713.2" y="316.5" fill="#FFC857" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[需管理员, 重启生效]</text>
+  <text x="558.4" y="337.5" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">23</text>
+  <text x="570.4" y="337.5" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">查看当前 UAC 状态</text>
+  <rect x="523.6" y="362.0" width="3" height="21.0" rx="1.5" fill="#6BE7FF" opacity="0.7"/>
+  <text x="535.6" y="379.0" fill="#6BE7FF" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[桌面美化]</text>
+  <text x="558.4" y="400.0" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">24</text>
+  <text x="570.4" y="400.0" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">去除快捷方式小箭头</text>
+  <text x="713.2" y="400.0" fill="#FFC857" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[需管理员]</text>
+  <text x="558.4" y="421.0" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">25</text>
+  <text x="570.4" y="421.0" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">恢复快捷方式小箭头</text>
+  <text x="713.2" y="421.0" fill="#FFC857" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[需管理员]</text>
+  <rect x="523.6" y="445.5" width="3" height="21.0" rx="1.5" fill="#6BE7FF" opacity="0.7"/>
+  <text x="535.6" y="462.5" fill="#6BE7FF" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[维护]</text>
+  <text x="558.4" y="483.5" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">26</text>
+  <text x="570.4" y="483.5" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">还原全部改动</text>
+  <text x="671.2" y="483.5" fill="#FFC857" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[需管理员, 一键恢复防火墙/更新/UAC/箭头]</text>
+  <rect x="523.6" y="508.0" width="3" height="21.0" rx="1.5" fill="#6BE7FF" opacity="0.7"/>
+  <text x="535.6" y="525.0" fill="#6BE7FF" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[修复]</text>
+  <text x="558.4" y="546.0" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">27</text>
+  <text x="570.4" y="546.0" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">一键修复</text>
+  <text x="643.2" y="546.0" fill="#4FA97A" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[系统文件 / 系统映像 / 网络 / 图标缓存, 子菜单]</text>
+  <rect x="523.6" y="570.5" width="3" height="21.0" rx="1.5" fill="#6BE7FF" opacity="0.7"/>
+  <text x="535.6" y="587.5" fill="#6BE7FF" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[电源 / 锁屏]</text>
+  <text x="558.4" y="608.5" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">28</text>
+  <text x="570.4" y="608.5" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">禁止锁屏与休眠</text>
+  <text x="685.2" y="608.5" fill="#FFC857" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[显示器不关 / 不睡眠 / 唤醒免密码, 需管理员]</text>
+  <text x="558.4" y="629.5" fill="#5AF78E" font-size="14.0" font-weight="700" text-anchor="end" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">29</text>
+  <text x="570.4" y="629.5" fill="#5AF78E" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">恢复锁屏与休眠默认</text>
+  <text x="713.2" y="629.5" fill="#FFC857" font-size="14.0" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">[需管理员]</text>
   <text x="26.0" y="697.5" fill="#5AF78E" font-size="14.0" font-weight="700" font-family="ui-monospace,SFMono-Regular,Menlo,Consolas,'PingFang SC','Microsoft YaHei',monospace">0   退出</text>
 </svg>
