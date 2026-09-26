@@ -47,6 +47,17 @@ def check(path: pathlib.Path):
     if raw.startswith(b"\xef\xbb\xbf"):
         errors.append("文件带 UTF-8 BOM, 会让 cmd 第一行报错")
 
+    # --- 2.5 行尾多余 CR (\r\r\n) ---
+    # 生成脚本时如果「先按 \r\n 拼接、又整体做一次 \n -> \r\n 转换」,
+    # 就会重复转换, 行尾多出一个 CR。cmd 解析这种行会出错。
+    # 踩过: set 赋值行带上 CR, 菜单输入全失效 —— 任何序号都判成"无效输入"。
+    stray = [i + 1 for i, l in enumerate(lines) if l.endswith("\r")]
+    if stray:
+        errors.append(
+            f"第 {stray[:5]} 行: 行尾多了一个 CR (\\r\\r\\n), "
+            f"生成脚本时重复转换了换行符"
+        )
+
     # --- 3 悬空跳转 ---
     labels = {
         l.strip()[1:].split()[0].lower()
