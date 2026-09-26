@@ -52,7 +52,7 @@ cls
 echo ========================================================
 echo    [星君] gp45.ys168.com  常用远程工具 v1.8
 echo    ---  网络 / 防火墙 / 系统 / UAC / 桌面管理  ---
-echo    作者: 星君 (Xingjun)  |  License: MIT
+echo    作者: 星君 (Xingjun)  ｜  License: MIT
 echo ========================================================
 echo.
 echo   [网络]
@@ -833,7 +833,7 @@ goto MENU
 cls
 echo ========================================================
 echo    星君常用远程工具 v1.8
-echo    作者: 星君 (Xingjun)  |  License: MIT
+echo    作者: 星君 (Xingjun)  ｜  License: MIT
 echo    感谢使用, 再见。
 echo ========================================================
 timeout /t 2 >nul

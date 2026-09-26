@@ -89,6 +89,23 @@ def check(path: pathlib.Path):
                 f"(直接回车会残留旧值, 可能被误判为确认)"
             )
 
+    # --- 5.5 echo 行里的未转义特殊字符 ---
+    # echo 后面没加引号时, | & < > 会被 cmd 当成管道/重定向/命令分隔符。
+    # 踩过: echo 作者: 星君 (Xingjun) | License: MIT 里的 | 被当成管道,
+    # 菜单从那一行开始就再也打不出来了。
+    for i, l in enumerate(lines, 1):
+        if not re.match(r"\s*echo\b", l, re.I):
+            continue
+        body = l.strip()[4:]
+        if body.startswith(".") or body.startswith("("):
+            continue
+        for ch, name in (("|", "管道"), ("<", "输入重定向"), (">", "输出重定向"), ("&", "命令分隔")):
+            if ch in body:
+                errors.append(
+                    f"第 {i} 行: echo 内容里有未转义的 {ch} ({name}), "
+                    f"会被 cmd 当成操作符 —— 改用全角字符或加 ^ 转义"
+                )
+
     # --- 6 延迟展开与 ! ---
     if re.search(r"EnableDelayedExpansion", text, re.I):
         if re.search(r"^\s*echo[^\r\n]*!", text, re.M):
