@@ -197,10 +197,15 @@ $apLines = @(
 $adminOut = (Invoke-Bat -Bat $adminProbe -InputText '').Output
 $isAdmin = $adminOut.Contains('FSUTIL=0')
 
+# wrapper 用子进程把控制台代码页设成了 936, 而这是整个作业共享的。
+# 不恢复的话, 下一个脚本运行时 PowerShell 自己的中文输出会变成乱码, 日志就没法看了。
+$origCp = ((& chcp) | Out-String) -replace '[^0-9]', ''
+
 # 断言里不要写死版本号 —— 仓库里可能同时有多个版本的文件要测
 $toolSrc = [System.IO.File]::ReadAllText($ScriptPath, $gbk)
 $ver = [regex]::Match($toolSrc, '星君常用远程工具 (v[\d.]+)').Groups[1].Value
 $hasRestore = $toolSrc.Contains('还原全部改动')
+$hasFixMenu = $toolSrc.Contains('重建图标缓存')
 Write-Host "版本     : $ver" 
 
 Write-Host "被测脚本 : $ScriptPath"
@@ -330,7 +335,7 @@ Test-Case -Name '确认提示按 N 走取消分支 (不改系统)' -NeedsAdmin `
 
 # 修复子菜单: 只验证「能打开、能返回」, 绝不真的执行修复动作
 # (SFC/DISM 会跑十几分钟, 而且会改系统)
-if ($hasRestore) {
+if ($hasFixMenu) {
     Test-Case -Name '功能 27 修复子菜单能打开并返回' `
               -InputText "27`n0`n0`n0`n" -BatArgs '/elevated' `
               -Contain @('重建图标缓存', '系统映像修复')
@@ -357,4 +362,8 @@ Write-Host ''
 Write-Host "通过 $pass / 失败 $fail / 跳过 $skip" -ForegroundColor $(if ($fail) { 'Red' } else { 'Green' })
 
 Remove-Item -LiteralPath $work -Recurse -Force -ErrorAction SilentlyContinue
+
+# 把控制台代码页恢复回去, 免得影响后面跑的脚本
+if ($origCp) { cmd /c "chcp $origCp" | Out-Null }
+
 exit $(if ($fail) { 1 } else { 0 })
