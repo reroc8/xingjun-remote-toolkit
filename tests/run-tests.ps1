@@ -57,30 +57,6 @@ New-Item -ItemType Directory -Path $work -Force | Out-Null
 $tool = Join-Path $work 'tool.bat'
 [System.IO.File]::WriteAllBytes($tool, [System.IO.File]::ReadAllBytes($ScriptPath))
 
-# 注意: PowerShell 的 IsInRole(Administrator) 只看组成员身份,
-# 令牌被 UAC 过滤时也会返回 True, 不能用来判断有没有真的提权。
-# 这里用一个探针实测, 顺便把结果打出来。
-$adminProbe = Join-Path $work 'admincheck.bat'
-$apLines = @(
-    '@echo off',
-    'fsutil dirty query %SystemDrive% >nul 2>&1',
-    'echo FSUTIL=%errorlevel%',
-    'net session >nul 2>&1',
-    'echo NETSESSION=%errorlevel%',
-    'whoami /groups | findstr /c:"S-1-16-12288" >nul 2>&1',
-    'echo HIGHINTEGRITY=%errorlevel%'
-)
-[System.IO.File]::WriteAllText($adminProbe, ($apLines -join "`r`n") + "`r`n", [System.Text.Encoding]::ASCII)
-$adminOut = (Invoke-Bat -Bat $adminProbe -InputText '').Output
-$isAdmin = $adminOut.Contains('FSUTIL=0')
-
-Write-Host "被测脚本 : $ScriptPath"
-Write-Host "工作目录 : $work"
-Write-Host "提权检测 : $(($adminOut -split "`r?`n" | Where-Object { $_ }) -join '  ')"
-Write-Host "判定     : $(if ($isAdmin) { '已提权' } else { '未提权 (令牌被过滤)' })"
-Write-Host ''
-
-
 function Invoke-Bat {
     param([string]$Bat, [string]$InputText, [string]$BatArgs = '')
     $id = [guid]::NewGuid().ToString('N').Substring(0, 8)
@@ -146,6 +122,29 @@ function Test-Case {
         Add-Result $Name 'PASS' ''
     }
 }
+
+# 注意: PowerShell 的 IsInRole(Administrator) 只看组成员身份,
+# 令牌被 UAC 过滤时也会返回 True, 不能用来判断有没有真的提权。
+# 这里用一个探针实测, 顺便把结果打出来。
+$adminProbe = Join-Path $work 'admincheck.bat'
+$apLines = @(
+    '@echo off',
+    'fsutil dirty query %SystemDrive% >nul 2>&1',
+    'echo FSUTIL=%errorlevel%',
+    'net session >nul 2>&1',
+    'echo NETSESSION=%errorlevel%',
+    'whoami /groups | findstr /c:"S-1-16-12288" >nul 2>&1',
+    'echo HIGHINTEGRITY=%errorlevel%'
+)
+[System.IO.File]::WriteAllText($adminProbe, ($apLines -join "`r`n") + "`r`n", [System.Text.Encoding]::ASCII)
+$adminOut = (Invoke-Bat -Bat $adminProbe -InputText '').Output
+$isAdmin = $adminOut.Contains('FSUTIL=0')
+
+Write-Host "被测脚本 : $ScriptPath"
+Write-Host "工作目录 : $work"
+Write-Host "提权检测 : $(($adminOut -split "`r?`n" | Where-Object { $_ }) -join '  ')"
+Write-Host "判定     : $(if ($isAdmin) { '已提权' } else { '未提权 (令牌被过滤)' })"
+Write-Host ''
 
 # ---------------------------------------------------------------- choice 行为自检
 # 先单独验证 choice 能不能读管道输入 —— 后面脚本里的确认提示都依赖这一点
