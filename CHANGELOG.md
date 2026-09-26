@@ -6,7 +6,25 @@
 
 ---
 
-## [v1.7] — 2026-09-26（已修复重发）
+## [v1.7] — 2026-09-26（第二次重发）
+
+**下载**：[XingjunRemoteTool-v1.7.bat](https://github.com/reroc8/xingjun-remote-toolkit/releases/download/v1.7/XingjunRemoteTool-v1.7.bat)
+**SHA256**：`c7f8488ec7df5bcf102f3e1442b7326bac31765bf4bfc63bdb5808abfac2aa27`
+
+第二次重发。修掉：
+
+- **小箭头图标索引写错**：`imageres.dll,-1970` → **`imageres.dll,197`**。
+  写错时替换出来的是另一个不相干的图标，表现就是"效果不对"
+- **结束资源管理器导致黑屏**（用户实测：整个桌面消失）——
+  功能 24 / 25 和「还原全部改动」里的 `taskkill explorer` + `start explorer` 全部移除。
+  改完只提示「注销再登录或重启后生效」。
+  原因见 [v1.8 条目](#v18--开发中尚未发版) 里的说明（微软问答有完全相同的案例）
+- **功能 13 加了系统关键进程拦截**：按 PID 强制结束进程时，
+  选中 `explorer.exe` / `winlogon.exe` / `lsass.exe` 等关键进程会被直接拦下
+
+---
+
+## [v1.7] — 2026-09-26（第一次重发）
 
 **下载**：[XingjunRemoteTool-v1.7.bat](https://github.com/reroc8/xingjun-remote-toolkit/releases/download/v1.7/XingjunRemoteTool-v1.7.bat)
 **SHA256**：`365e35fb79a375268b53856df6355259262c8cdce45df7058a034811bef4825a`
@@ -25,8 +43,8 @@
 
 > **后续（2026-09-26）：** v1.7 的功能 24 / 25 里有 `taskkill explorer` + `start explorer`，
 > 和 v1.8 一样会导致**桌面黑屏回不来**（见 v1.8 条目里的说明）。
-> 仓库里的 v1.7 已经改成「改完提示注销或重启后生效」，不再动资源管理器。
-> ⚠️ **但发布页上的附件还是旧的** —— 需要重发 v1.7 才会同步。
+> 已改成「改完提示注销或重启后生效」，不再动资源管理器，并**重新发布**了 v1.7
+> （第二次重发，见下面「v1.7 第二次重发」一节）。
 
 ---
 
