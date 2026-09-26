@@ -123,14 +123,10 @@ function Test-Case {
         if ($out.Contains($s)) { $problems += "不该出现: $s" }
     }
     if ($problems.Count) {
-        $ex = if ($out) {
-            $out.Substring(0, [Math]::Min(500, $out.Length)) -replace "`r?`n", ' ⏎ '
-        } else {
-            '<脚本没有任何输出>'
-        }
         Add-Result $Name 'FAIL' ($problems -join ' / ')
-        Write-Host "  [调试] $Name 退出码=$($r.ExitCode) 输出长度=$($out.Length)"
-        Write-Host "  [调试] 实际输出: $ex" -ForegroundColor DarkGray
+        Write-Host "  ----- 失败详情: $Name (输出 $($out.Length) 字节) -----" -ForegroundColor DarkYellow
+        if ($out) { Write-Host $out } else { Write-Host "<脚本没有任何输出>" }
+        Write-Host "  ----- 详情结束 -----" -ForegroundColor DarkYellow
     } else {
         Add-Result $Name 'PASS' ''
     }
@@ -154,6 +150,10 @@ Test-Case -Name 'choice 能读管道输入 (按 N)' -Bat $choiceBat `
 
 # ---------------------------------------------------------------- 主脚本用例
 # 每个用例的输入都以 0 收尾, 保证脚本一定会退出, 不会空转
+# 功能执行时都会先打一条横线包起来的标题, 用它当断言标记,
+# 免得匹配到菜单里的同名文字造成「假通过」
+$T = '-------------------- '
+
 Test-Case -Name '菜单能显示并正常退出' `
           -InputText "0`r`n0`r`n0`r`n" `
           -Contain @('星君常用远程工具 v1.8', '感谢使用, 再见。')
@@ -167,39 +167,40 @@ Test-Case -Name '无效输入有提示' `
           -InputText "99`r`n0`r`n0`r`n" `
           -Contain @('无效输入, 请输入 0-26 的序号。')
 
-Test-Case -Name '半角序号可用' `
+Test-Case -Name '半角序号可用 (功能 3)' `
           -InputText "3`r`n0`r`n0`r`n" `
-          -Contain @('默认网关与 DNS 服务器')
+          -Contain @("${T}默认网关与 DNS 服务器${T}")
 
-Test-Case -Name '全角序号 ２ 自动转半角' `
+Test-Case -Name '全角序号 ２ 自动转半角 (功能 2)' `
           -InputText "２`r`n0`r`n0`r`n" `
-          -Contain @('IP 地址与子网掩码')
+          -Contain @("${T}IP 地址与子网掩码${T}")
 
-Test-Case -Name '全角两位数 ２３ 自动转半角' `
+Test-Case -Name '全角两位数 ２３ 自动转半角 (功能 23)' `
           -InputText "２３`r`n0`r`n0`r`n" `
-          -Contain @('当前 UAC 状态')
+          -Contain @("${T}当前 UAC 状态${T}")
 
-Test-Case -Name '序号前后空格被忽略' `
+Test-Case -Name '序号前后空格被忽略 (功能 2)' `
           -InputText "  2  `r`n0`r`n0`r`n" `
-          -Contain @('IP 地址与子网掩码')
+          -Contain @("${T}IP 地址与子网掩码${T}")
 
 Test-Case -Name '只读功能 9 防火墙状态' `
           -InputText "9`r`n0`r`n0`r`n" `
-          -Contain @('防火墙状态', 'Domain')
+          -Contain @("${T}防火墙状态${T}")
 
 Test-Case -Name '只读功能 23 UAC 状态' `
           -InputText "23`r`n0`r`n0`r`n" `
-          -Contain @('当前 UAC 状态', 'EnableLUA')
+          -Contain @("${T}当前 UAC 状态${T}", 'EnableLUA')
 
 Test-Case -Name '确认提示按 N 走取消分支 (不改系统)' -NeedsAdmin `
           -InputText "11`r`nN`r`n0`r`n0`r`n" `
           -Contain @('已取消。') `
           -NotContain @('排查完成后请用功能 10')
 
-Test-Case -Name '确认提示按 Y 走执行分支' -NeedsAdmin `
+Test-Case -Name '确认提示按 Y 走执行分支 (功能 10)' -NeedsAdmin `
           -InputText "10`r`nY`r`n0`r`n0`r`n" `
           -Contain @('【验证】当前状态') `
           -NotContain @('已取消。')
+
 
 # ---------------------------------------------------------------- 汇总
 Write-Host ''
