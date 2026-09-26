@@ -349,7 +349,7 @@ if ($hasLockMenu) {
 # (SFC/DISM 会跑十几分钟, 而且会改系统)
 if ($hasFixMenu) {
     Test-Case -Name '功能 27 修复子菜单能打开并返回' `
-              -InputText "27`n0`n0`n0`n" -BatArgs '/elevated' `
+              -InputText "27`n0`n0`n" -BatArgs '/elevated' `
               -Contain @('重建图标缓存', '系统映像修复')
 }
 

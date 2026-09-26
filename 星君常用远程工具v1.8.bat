@@ -755,6 +755,14 @@ goto DONE
 
 :FIX_MENU
 cls
+call :CHECK_ADMIN
+if "%IS_ADMIN%"=="0" (
+    echo   [!] 修复功能需要管理员权限。
+    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
+    echo.
+    pause
+    goto MENU
+)
 echo -------------------- 一键修复 --------------------
 echo   适用: 电脑卡顿 / 蓝屏 / 更新报错 / 上不了网 / 图标变白。
 echo   全部调用 Windows 自带命令, 不联网、不装东西。
@@ -771,33 +779,15 @@ echo   提示:
 echo     - 2 和 3 很慢, 可能要 10-30 分钟, 中途别关窗口
 echo     - 4 会重置网络设置, 完成后一般要重启电脑
 echo.
-set "choice="
-set /p choice=请输入序号后回车: 
-call :NORM
-
-if "%choice%"=="0" goto MENU
-
-:: 权限检查放在读取之后 —— 一是「只看菜单」不该要求管理员,
-:: 二是 call 子程序之后紧跟 set /p 会读不到重定向输入
-call :CHECK_ADMIN
-if "%IS_ADMIN%"=="0" (
-    echo.
-    echo   [!] 修复功能需要管理员权限。
-    echo       请关闭本窗口后重新运行, 在 UAC 弹窗里点「是」。
-    echo.
-    pause
-    goto DONE
-)
-
-if "%choice%"=="1" goto FIX_ALL
-if "%choice%"=="2" goto FIX_SFC
-if "%choice%"=="3" goto FIX_DISM
-if "%choice%"=="4" goto FIX_NET
-if "%choice%"=="5" goto FIX_ICON
-echo.
-echo   无效输入, 请输入 0-5 的序号。
-timeout /t 2 >nul
-goto FIX_MENU
+:: 子菜单只有 6 个选项, 用 choice 单键选择 —— 不用敲回车, 也不会读不到输入
+:: (实测重定向输入时, 同一个进程里只有第一次 set /p 能读到内容)
+choice /c 123450 /n /m "请按键选择 [1-5=执行 / 0=返回主菜单]: "
+if errorlevel 6 goto MENU
+if errorlevel 5 goto FIX_ICON
+if errorlevel 4 goto FIX_NET
+if errorlevel 3 goto FIX_DISM
+if errorlevel 2 goto FIX_SFC
+goto FIX_ALL
 
 :FIX_ALL
 cls
