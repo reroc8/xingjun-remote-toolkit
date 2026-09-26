@@ -72,27 +72,21 @@ Write-Host "已从测试副本里移除 $($removed.Count) 行含 chcp 的代码:
 $removed | ForEach-Object { Write-Host "    - $($_.Trim())" }
 
 function Read-Output {
-    # 测试环境里不能用 chcp(它会让 set /p 读不到重定向输入), 所以脚本输出的
-    # 编码取决于控制台默认代码页, 不一定是 GBK。这里按「解出来 CJK 字符最多」
-    # 的编码来读, GBK 和 UTF-8 都能自动认出来。
+    # 测试环境不能用 chcp(它会让 set /p 读不到重定向输入), 所以脚本输出的
+    # 编码取决于控制台默认代码页, 不一定是 GBK。
+    #
+    # 不要用「解出来 CJK 字符最多」这种启发式 —— 猜错的时候两种解码都能解出
+    # 一堆生僻字, 反而选错。改用确定性判断: 脚本输出里一定有"星君"两个字,
+    # 哪个编码能解出这两个字, 就用哪个。
     param([string]$Path)
     $bytes = [System.IO.File]::ReadAllBytes($Path)
-    $cands = @(
-        [System.Text.Encoding]::GetEncoding(936),
-        (New-Object System.Text.UTF8Encoding $false),
-        [System.Text.Encoding]::Default
-    )
-    $best = ''; $bestScore = -1
-    foreach ($enc in $cands) {
+    $gbkEnc = [System.Text.Encoding]::GetEncoding(936)
+    $utf8Enc = New-Object System.Text.UTF8Encoding $false
+    foreach ($enc in @($gbkEnc, $utf8Enc)) {
         $t = $enc.GetString($bytes)
-        $cjk = 0
-        foreach ($ch in $t.ToCharArray()) {
-            $c = [int]$ch
-            if ($c -ge 0x4E00 -and $c -le 0x9FFF) { $cjk++ }
-        }
-        if ($cjk -gt $bestScore) { $bestScore = $cjk; $best = $t }
+        if ($t.Contains('星君')) { return $t }
     }
-    return $best
+    return $gbkEnc.GetString($bytes)
 }
 
 function Invoke-Bat {
