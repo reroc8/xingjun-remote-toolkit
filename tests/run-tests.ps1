@@ -109,13 +109,13 @@ function Invoke-Bat {
                        -PassThru -NoNewWindow -WorkingDirectory $work
     if (-not $p.WaitForExit($TimeoutSec * 1000)) {
         try { $p.Kill() } catch { }
-        return [pscustomobject]@{ TimedOut = $true; Output = ''; ExitCode = -1 }
+        return [pscustomobject]@{ TimedOut = $true; Output = ''; ExitCode = -1; OutFile = $outF }
     }
     $text = ''
     if (Test-Path -LiteralPath $outF) {
         $text = Read-Output $outF
     }
-    return [pscustomobject]@{ TimedOut = $false; Output = $text; ExitCode = $p.ExitCode }
+    return [pscustomobject]@{ TimedOut = $false; Output = $text; ExitCode = $p.ExitCode; OutFile = $outF }
 }
 
 $results = New-Object System.Collections.ArrayList
@@ -140,7 +140,17 @@ function Test-Case {
     }
     $r = Invoke-Bat -Bat $Bat -InputText $InputText -BatArgs $BatArgs
     if ($r.TimedOut) {
-        Add-Result $Name 'FAIL' "超时 $TimeoutSec 秒 (脚本卡住或被 choice/pause 阻塞)"
+        Add-Result $Name 'FAIL' "超时 $TimeoutSec 秒 (脚本卡住)"
+        Write-Host "  ----- 超时详情: $Name -----" -ForegroundColor DarkYellow
+        if (Test-Path -LiteralPath $r.OutFile) {
+            $partial = Read-Output $r.OutFile
+            Write-Host "  (已产生的输出 $($partial.Length) 字符, 末尾 800 字符)"
+            if ($partial.Length -gt 800) { $partial = $partial.Substring($partial.Length - 800) }
+            Write-Host $partial
+        } else {
+            Write-Host "  <没有任何输出>"
+        }
+        Write-Host "  ----- 详情结束 -----" -ForegroundColor DarkYellow
         return
     }
     $out = $r.Output
