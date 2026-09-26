@@ -603,15 +603,13 @@ if "%IS_ADMIN%"=="0" (
     pause
     goto MENU
 )
-echo -------------------- 去除快捷方式箭头 --------------------
-echo   原理: 将快捷方式图标替换为透明图标, 并重启资源管理器。
-echo   桌面和任务栏会闪一下, 属正常现象。
+echo -------------------- 去除快捷方式小箭头 --------------------
+echo   原理: 把快捷方式左下角那个箭头图标, 换成一张接近透明的图标。
 echo.
-echo   [!] 本功能以管理员身份重启资源管理器, 新的资源管理器可能继承
-echo       管理员权限, 导致桌面拖拽 / 部分系统应用异常。
-echo       若出现异常, 注销或重启一次电脑即可恢复。
+echo   [!] 会重启资源管理器: 桌面和任务栏会消失几秒再回来, 属正常, 请等它。
+echo       期间不要强关窗口, 也不要自己再去开任务管理器。
 echo.
-reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /t REG_SZ /d "%windir%\System32\imageres.dll,-1970" /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /t REG_SZ /d "%windir%\System32\imageres.dll,197" /f
 if errorlevel 1 (
     echo.
     echo   [!] 写注册表失败, 请确认以管理员身份运行。
@@ -619,10 +617,10 @@ if errorlevel 1 (
 )
 echo.
 echo   正在重启资源管理器...
-taskkill /f /im explorer.exe >nul 2>&1
-start explorer.exe
+call :RESTART_EXPLORER
 echo.
-echo   完成, 快捷方式小箭头已去除。
+echo   完成。
+echo   提示: 如果小箭头还在, 跑一次功能 27 里的「重建图标缓存」刷新一下。
 goto DONE
 
 :ARROW_ON
@@ -635,10 +633,8 @@ if "%IS_ADMIN%"=="0" (
     pause
     goto MENU
 )
-echo -------------------- 恢复快捷方式箭头 --------------------
-echo   [!] 本功能以管理员身份重启资源管理器, 新的资源管理器可能继承
-echo       管理员权限, 导致桌面拖拽 / 部分系统应用异常。
-echo       若出现异常, 注销或重启一次电脑即可恢复。
+echo -------------------- 恢复快捷方式小箭头 --------------------
+echo   [!] 会重启资源管理器: 桌面和任务栏会消失几秒再回来, 属正常, 请等它。
 echo.
 reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 >nul 2>&1
 if errorlevel 1 (
@@ -648,8 +644,7 @@ if errorlevel 1 (
 echo   正在还原注册表...
 reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /f >nul 2>&1
 echo   正在重启资源管理器...
-taskkill /f /im explorer.exe >nul 2>&1
-start explorer.exe
+call :RESTART_EXPLORER
 echo.
 echo   完成, 快捷方式小箭头已恢复。
 goto DONE
@@ -706,8 +701,7 @@ reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" 
 if errorlevel 1 goto RA_NO_ARROW
 reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /f >nul 2>&1
 echo         注册表项已删除, 正在重启资源管理器...
-taskkill /f /im explorer.exe >nul 2>&1
-start explorer.exe
+call :RESTART_EXPLORER
 goto RA_ARROW_DONE
 :RA_NO_ARROW
 echo         当前未去除箭头, 跳过。
@@ -869,9 +863,9 @@ cls
 echo -------------------- 重建图标缓存 --------------------
 echo   适用: 图标变白 / 图标错乱 / 显示成默认图标。
 echo.
-echo   [!] 会重启资源管理器, 桌面和任务栏会闪一下。
-echo       新的资源管理器可能继承管理员权限, 若出现拖拽异常,
-echo       注销或重启一次电脑即可恢复。
+echo   [!] 会重启资源管理器: 桌面和任务栏会消失几秒再回来, 属正常, 请等它。
+echo       这一步会把图标缓存文件删掉让系统重建, 期间不要强关窗口,
+echo       也不要自己去开任务管理器 —— 外壳还没回来的话会看着像卡死。
 echo.
 set "sure="
 choice /c YN /n /m "确认重建图标缓存? [Y=执行 /N=取消] "
@@ -887,13 +881,31 @@ echo   完成。图标缓存已重建。
 goto DONE
 
 :ICON_REBUILD
-:: 公共子程序: 重启资源管理器并清掉图标缓存文件
+:: 公共子程序: 清掉图标缓存文件, 然后重启资源管理器
 taskkill /f /im explorer.exe >nul 2>&1
 echo   正在删除旧的图标缓存...
+attrib -s -r -h "%LocalAppData%\IconCache.db" >nul 2>&1
 del /a /f "%LocalAppData%\IconCache.db" >nul 2>&1
 del /a /f "%LocalAppData%\Microsoft\Windows\Explorer\iconcache*" >nul 2>&1
 echo   正在重启资源管理器...
-start explorer.exe
+call :RESTART_EXPLORER
+exit /b
+
+:RESTART_EXPLORER
+:: 公共子程序: 结束资源管理器, 等它自己回来; 没回来才手动启动。
+::
+:: 关键: 不要在这个提权窗口里直接 start explorer.exe ——
+:: 那样起来的资源管理器带管理员权限, 任务栏 / 桌面 / 任务管理器会不正常,
+:: 看着就像卡死。Windows 默认会自动把外壳拉起来, 所以先等一下再检查。
+taskkill /f /im explorer.exe >nul 2>&1
+timeout /t 3 /nobreak >nul
+tasklist /fi "imagename eq explorer.exe" 2>nul | findstr /i "explorer.exe" >nul 2>&1
+if errorlevel 1 (
+    echo   资源管理器没有自动回来, 手动启动...
+    start "" explorer.exe
+) else (
+    echo   资源管理器已自动回来。
+)
 exit /b
 
 :: ---------------- 电源 / 锁屏 ----------------
