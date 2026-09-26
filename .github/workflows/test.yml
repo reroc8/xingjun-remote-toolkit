@@ -33,27 +33,22 @@ jobs:
       - name: 检出代码
         uses: actions/checkout@v4
 
+      # 注意: 这一步的 PowerShell 里不要写中文。
+      # GitHub Actions 会把 run: 的内容写成一个不带 BOM 的 .ps1,
+      # Windows PowerShell 5.1 会按系统 ANSI 读它, 中文会直接搞坏解析。
+      # 需要中文的提示都放在 tests/run-tests.ps1 里(那个文件带 BOM)。
       - name: 在真实 Windows 上运行脚本
         shell: powershell
         run: |
-          # 逐个测仓库根目录下的每个 .bat —— 仓库里可能同时有
-          # 已发布的稳定版和主分支上的开发版。
-          # 每个文件用一个独立的 powershell 进程跑, 这样脚本里的 exit
-          # 只影响它自己, $LASTEXITCODE 也能正确反映结果。
           $bats = @(Get-ChildItem -LiteralPath . -Filter *.bat | Sort-Object Name)
-          Write-Host "待测脚本: $($bats.Name -join ', ')"
+          Write-Host ("scripts under test: " + ($bats.Name -join ', '))
           $failed = @()
           foreach ($b in $bats) {
-            Write-Host ""
             Write-Host ("=" * 60)
-            Write-Host "  测试 $($b.Name)"
+            Write-Host ("  " + $b.Name)
             Write-Host ("=" * 60)
-            powershell -NoProfile -ExecutionPolicy Bypass `
-                       -File .\tests\run-tests.ps1 -ScriptPath $b.FullName
+            powershell -NoProfile -ExecutionPolicy Bypass -File .\tests\run-tests.ps1 -ScriptPath $b.FullName
             if ($LASTEXITCODE -ne 0) { $failed += $b.Name }
           }
-          if ($failed.Count -gt 0) {
-            throw "以下脚本测试失败: $($failed -join ', ')"
-          }
-          Write-Host ""
-          Write-Host "全部脚本测试通过" -ForegroundColor Green
+          if ($failed.Count -gt 0) { throw ("FAILED: " + ($failed -join ', ')) }
+          Write-Host "ALL PASSED"
