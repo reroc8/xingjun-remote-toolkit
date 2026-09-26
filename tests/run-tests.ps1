@@ -1,4 +1,4 @@
-﻿# -*- coding: utf-8 -*-
+﻿﻿# -*- coding: utf-8 -*-
 # 注意: 本文件必须保存为 UTF-8 with BOM。
 # Windows PowerShell 5.1 会把没有 BOM 的 UTF-8 脚本按系统 ANSI 代码页读,
 # 里面的中文会全部乱码, 断言就全对不上了。(CI 上踩过)
@@ -83,12 +83,13 @@ function Invoke-Bat {
                        -PassThru -NoNewWindow -WorkingDirectory $work
     if (-not $p.WaitForExit($TimeoutSec * 1000)) {
         try { $p.Kill() } catch { }
-        return $null
+        return [pscustomobject]@{ TimedOut = $true; Output = ''; ExitCode = -1 }
     }
+    $text = ''
     if (Test-Path -LiteralPath $outF) {
-        return [System.IO.File]::ReadAllText($outF, $gbk)
+        $text = [System.IO.File]::ReadAllText($outF, $gbk)
     }
-    return ''
+    return [pscustomobject]@{ TimedOut = $false; Output = $text; ExitCode = $p.ExitCode }
 }
 
 $results = New-Object System.Collections.ArrayList
@@ -110,11 +111,12 @@ function Test-Case {
         Add-Result $Name 'SKIP' '当前不是管理员, 跳过'
         return
     }
-    $out = Invoke-Bat -Bat $Bat -InputText $InputText
-    if ($null -eq $out) {
+    $r = Invoke-Bat -Bat $Bat -InputText $InputText
+    if ($r.TimedOut) {
         Add-Result $Name 'FAIL' "超时 $TimeoutSec 秒 (脚本卡住或被 choice/pause 阻塞)"
         return
     }
+    $out = $r.Output
     $problems = @()
     # 用 Contains 做字面量匹配 —— -like 会把断言里的 * ? [ ] 当通配符
     foreach ($s in $Contain) {
@@ -124,7 +126,14 @@ function Test-Case {
         if ($out.Contains($s)) { $problems += "不该出现: $s" }
     }
     if ($problems.Count) {
+        $ex = if ($out) {
+            $out.Substring(0, [Math]::Min(500, $out.Length)) -replace "`r?`n", ' ⏎ '
+        } else {
+            '<脚本没有任何输出>'
+        }
         Add-Result $Name 'FAIL' ($problems -join ' / ')
+        Write-Host "  [调试] $Name 退出码=$($r.ExitCode) 输出长度=$($out.Length)"
+        Write-Host "  [调试] 实际输出: $ex" -ForegroundColor DarkGray
     } else {
         Add-Result $Name 'PASS' ''
     }
