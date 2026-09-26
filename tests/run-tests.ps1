@@ -1,30 +1,27 @@
-﻿﻿# -*- coding: utf-8 -*-
-# 注意: 本文件必须保存为 UTF-8 with BOM。
-# Windows PowerShell 5.1 会把没有 BOM 的 UTF-8 脚本按系统 ANSI 代码页读,
-# 里面的中文会全部乱码, 断言就全对不上了。(CI 上踩过)
-<#
-.SYNOPSIS
-    星君常用远程工具 —— Windows 冒烟测试。
+﻿# 星君常用远程工具 —— Windows 冒烟测试
+#
+# 在真实 Windows 上运行脚本, 喂入按键序列, 断言输出内容。
+# 只测「不会改动系统」的路径, 或者「确认时选取消」的路径。
+#
+# 用法:
+#   powershell -ExecutionPolicy Bypass -File tests\run-tests.ps1
+#
+# 参数:
+#   -ScriptPath  被测脚本。不传则在仓库根目录里自动找第一个 .bat。
+#   -TimeoutSec  单个用例的超时秒数, 默认 60。超时说明脚本卡住了。
+#
+# 两个 Windows 上的坑, 别改坏:
+#   1. 本文件必须是 UTF-8 with BOM。Windows PowerShell 5.1 会把没有 BOM 的
+#      UTF-8 脚本按系统 ANSI 代码页读, 里面的中文断言会全部乱码。
+#   2. 本文件必须是 CRLF 换行。PowerShell 5.1 对纯 LF 的脚本会解析异常
+#      (跨行块注释会认不出来), 报 "Unexpected attribute 'CmdletBinding'"。
+#
+# 为什么把脚本复制到纯 ASCII 的临时路径再跑:
+#   脚本文件名是中文, 而生成的辅助 .cmd 会被 cmd 按当前代码页解析,
+#   代码页不是 936 时中文路径会乱码。复制成 ASCII 名最省事。
+#
+# 输出文件按 GBK 读 —— 脚本里执行了 chcp 936, 重定向到文件的是 GBK 字节。
 
-.DESCRIPTION
-    在真实 Windows 上运行脚本, 喂入按键序列, 断言输出内容。
-    只测「不会改动系统」的路径, 或者「确认时选取消」的路径。
-
-    为什么要把脚本复制到一个纯 ASCII 的临时路径再跑:
-    脚本文件名是中文, 而生成的辅助 .cmd 会被 cmd 按当前代码页解析,
-    代码页不是 936 时中文路径会乱码。复制成 ASCII 名最省事。
-
-    输出文件按 GBK 读 —— 脚本里执行了 chcp 936, 重定向到文件的是 GBK 字节。
-
-.PARAMETER ScriptPath
-    被测脚本。不传则在仓库根目录里自动找第一个 .bat。
-
-.PARAMETER TimeoutSec
-    单个用例的超时秒数, 默认 60。超时说明脚本卡住了。
-
-.EXAMPLE
-    powershell -ExecutionPolicy Bypass -File tests\run-tests.ps1
-#>
 [CmdletBinding()]
 param(
     [string]$ScriptPath = '',
