@@ -144,60 +144,76 @@ $cbLines = @(
                                [System.Text.Encoding]::ASCII)
 
 Test-Case -Name 'choice 能读管道输入 (按 Y)' -Bat $choiceBat `
-          -InputText "Y`r`n" -Contain @('RESULT=Y')
+          -InputText "Y`n" -Contain @('RESULT=Y')
 Test-Case -Name 'choice 能读管道输入 (按 N)' -Bat $choiceBat `
-          -InputText "N`r`n" -Contain @('RESULT=N')
+          -InputText "N`n" -Contain @('RESULT=N')
 
 # ---------------------------------------------------------------- 主脚本用例
 # 每个用例的输入都以 0 收尾, 保证脚本一定会退出, 不会空转
+# ---------------------------------------------------------------- 探针
+# set /p 从重定向文件读入时, 可能把行尾的 CR 一起放进变量,
+# 导致 if "%x%"=="3" 匹配不上。先用最小例子确认这个判断。
+$probe = Join-Path $work 'probe.bat'
+$pb = @(
+    '@echo off',
+    'set "x="',
+    'set /p x=pick: ',
+    'if "%x%"=="3" (echo MATCH) else (echo NOMATCH)'
+)
+[System.IO.File]::WriteAllText($probe, ($pb -join "`r`n") + "`r`n",
+                               [System.Text.Encoding]::ASCII)
+Test-Case -Name '探针 set /p 读 CRLF 输入' -Bat $probe -InputText "3`r`n" -Contain @('MATCH')
+Test-Case -Name '探针 set /p 读 LF 输入' -Bat $probe -InputText "3`n" -Contain @('MATCH')
+
+
 # 功能执行时都会先打一条横线包起来的标题, 用它当断言标记,
 # 免得匹配到菜单里的同名文字造成「假通过」
 $T = '-------------------- '
 
 Test-Case -Name '菜单能显示并正常退出' `
-          -InputText "0`r`n0`r`n0`r`n" `
+          -InputText "0`n0`n0`n" `
           -Contain @('星君常用远程工具 v1.8', '感谢使用, 再见。')
 
 Test-Case -Name '菜单列出全部条目' `
-          -InputText "0`r`n0`r`n" `
+          -InputText "0`n0`n" `
           -Contain @('1   查看完整网络配置', '13   端口占用排查',
                      '26   还原全部改动', '0   退出')
 
 Test-Case -Name '无效输入有提示' `
-          -InputText "99`r`n0`r`n0`r`n" `
+          -InputText "99`n0`n0`n" `
           -Contain @('无效输入, 请输入 0-26 的序号。')
 
 Test-Case -Name '半角序号可用 (功能 3)' `
-          -InputText "3`r`n0`r`n0`r`n" `
+          -InputText "3`n0`n0`n" `
           -Contain @("${T}默认网关与 DNS 服务器${T}")
 
 Test-Case -Name '全角序号 ２ 自动转半角 (功能 2)' `
-          -InputText "２`r`n0`r`n0`r`n" `
+          -InputText "２`n0`n0`n" `
           -Contain @("${T}IP 地址与子网掩码${T}")
 
 Test-Case -Name '全角两位数 ２３ 自动转半角 (功能 23)' `
-          -InputText "２３`r`n0`r`n0`r`n" `
+          -InputText "２３`n0`n0`n" `
           -Contain @("${T}当前 UAC 状态${T}")
 
 Test-Case -Name '序号前后空格被忽略 (功能 2)' `
-          -InputText "  2  `r`n0`r`n0`r`n" `
+          -InputText "  2  `n0`n0`n" `
           -Contain @("${T}IP 地址与子网掩码${T}")
 
 Test-Case -Name '只读功能 9 防火墙状态' `
-          -InputText "9`r`n0`r`n0`r`n" `
+          -InputText "9`n0`n0`n" `
           -Contain @("${T}防火墙状态${T}")
 
 Test-Case -Name '只读功能 23 UAC 状态' `
-          -InputText "23`r`n0`r`n0`r`n" `
+          -InputText "23`n0`n0`n" `
           -Contain @("${T}当前 UAC 状态${T}", 'EnableLUA')
 
 Test-Case -Name '确认提示按 N 走取消分支 (不改系统)' -NeedsAdmin `
-          -InputText "11`r`nN`r`n0`r`n0`r`n" `
+          -InputText "11`nN`n0`n0`n" `
           -Contain @('已取消。') `
           -NotContain @('排查完成后请用功能 10')
 
 Test-Case -Name '确认提示按 Y 走执行分支 (功能 10)' -NeedsAdmin `
-          -InputText "10`r`nY`r`n0`r`n0`r`n" `
+          -InputText "10`nY`n0`n0`n" `
           -Contain @('【验证】当前状态') `
           -NotContain @('已取消。')
 
