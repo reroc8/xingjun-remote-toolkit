@@ -7,7 +7,12 @@
 ::          使用前请阅读同目录 README 中的注意事项。
 :: ============================================================
 setlocal EnableExtensions
-chcp 936 >nul 2>&1
+:: 只在控制台代码页不是 936 时才切换 —— 中文系统本来就是 936, 不必多此一举;
+:: 少一次控制台调用也更稳
+set "CONSOLE_CP="
+for /f "tokens=2 delims=:" %%c in ('chcp') do set "CONSOLE_CP=%%c"
+set "CONSOLE_CP=%CONSOLE_CP: =%"
+if not "%CONSOLE_CP%"=="936" chcp 936 >nul 2>&1
 title 星君常用远程工具 v1.8  -  作者: 星君
 color 0A
 

@@ -55,7 +55,14 @@ New-Item -ItemType Directory -Path $work -Force | Out-Null
 
 # 复制成 ASCII 文件名, 避免代码页把中文路径搞乱
 $tool = Join-Path $work 'tool.bat'
-[System.IO.File]::WriteAllBytes($tool, [System.IO.File]::ReadAllBytes($ScriptPath))
+# 测试环境要在没有真实控制台的情况下喂入按键, 而 chcp 在「无控制台 + 重定向输入」
+# 的组合下会让后续 set /p 读不到输入(实测: 去掉 chcp 就正常, 保留就读到空)。
+# 所以副本里把脚本自己的 chcp 中和掉, 改由 wrapper 在调用前设好代码页 ——
+# 这样输出仍是 GBK, set /p 也能正常读到按键。
+$toolText = [System.IO.File]::ReadAllText($ScriptPath, $gbk)
+$toolText = $toolText.Replace('if not "%CONSOLE_CP%"=="936" chcp 936 >nul 2>&1',
+                              'rem [测试环境] 见 run-tests.ps1 里的说明')
+[System.IO.File]::WriteAllText($tool, $toolText, $gbk)
 
 function Invoke-Bat {
     param([string]$Bat, [string]$InputText, [string]$BatArgs = '')
@@ -64,7 +71,7 @@ function Invoke-Bat {
     $outF = Join-Path $work "out-$id.txt"
     $runF = Join-Path $work "run-$id.cmd"
     [System.IO.File]::WriteAllText($inF, $InputText, $gbk)
-    $w = "@echo off`r`n`"$Bat`" $BatArgs < `"$inF`" > `"$outF`" 2>&1`r`n"
+    $w = "@echo off`r`nchcp 936 >nul`r`n`"$Bat`" $BatArgs < `"$inF`" > `"$outF`" 2>&1`r`n"
     [System.IO.File]::WriteAllText($runF, $w, [System.Text.Encoding]::ASCII)
     $p = Start-Process -FilePath $env:ComSpec -ArgumentList '/c', $runF `
                        -PassThru -NoNewWindow -WorkingDirectory $work
@@ -174,29 +181,29 @@ $mkProbe = {
 }
 
 $p1 = & $mkProbe (Join-Path $work 'p1.bat') @(
-    'set "x="', 'set /p x=pick: ', 'if "%x%"=="11" (echo MATCH) else (echo NOMATCH)')
-Test-Case -Name '探针1 基线 ASCII 提示' -Bat $p1 -InputText "11`n" -Contain @('MATCH')
+    'set "x="', 'set /p x=pick: ', 'if "%x%"=="11" (echo YES-MATCH) else (echo NO-MATCH)')
+Test-Case -Name '探针1 基线 ASCII 提示' -Bat $p1 -InputText "11`n" -Contain @('YES-MATCH')
 
 $p2 = & $mkProbe (Join-Path $work 'p2.bat') @(
     'chcp 936 >nul 2>&1', 'set "x="', 'set /p x=pick: ',
-    'if "%x%"=="11" (echo MATCH) else (echo NOMATCH)')
-Test-Case -Name '探针2 加了 chcp 936' -Bat $p2 -InputText "11`n" -Contain @('MATCH')
+    'if "%x%"=="11" (echo YES-MATCH) else (echo NO-MATCH)')
+Test-Case -Name '探针2 加了 chcp 936' -Bat $p2 -InputText "11`n" -Contain @('YES-MATCH')
 
 $p3 = & $mkProbe (Join-Path $work 'p3.bat') @(
     'set "x="', 'set /p x=请输入序号后回车: ',
-    'if "%x%"=="11" (echo MATCH) else (echo NOMATCH)')
-Test-Case -Name '探针3 中文提示' -Bat $p3 -InputText "11`n" -Contain @('MATCH')
+    'if "%x%"=="11" (echo YES-MATCH) else (echo NO-MATCH)')
+Test-Case -Name '探针3 中文提示' -Bat $p3 -InputText "11`n" -Contain @('YES-MATCH')
 
 $p4 = & $mkProbe (Join-Path $work 'p4.bat') @(
     'chcp 936 >nul 2>&1', 'title t', 'color 0A',
     'set "x="', 'set /p x=请输入序号后回车: ',
-    'if "%x%"=="11" (echo MATCH) else (echo NOMATCH)')
-Test-Case -Name '探针4 中文提示+chcp+title+color' -Bat $p4 -InputText "11`n" -Contain @('MATCH')
+    'if "%x%"=="11" (echo YES-MATCH) else (echo NO-MATCH)')
+Test-Case -Name '探针4 中文提示+chcp+title+color' -Bat $p4 -InputText "11`n" -Contain @('YES-MATCH')
 
 $p6 = & $mkProbe (Join-Path $work 'p6.bat') @(
     'cls', 'set "x="', 'set /p x=pick: ',
-    'if "%x%"=="11" (echo MATCH) else (echo NOMATCH)')
-Test-Case -Name '探针6 加了 cls' -Bat $p6 -InputText "11`n" -Contain @('MATCH')
+    'if "%x%"=="11" (echo YES-MATCH) else (echo NO-MATCH)')
+Test-Case -Name '探针6 加了 cls' -Bat $p6 -InputText "11`n" -Contain @('YES-MATCH')
 
 # 用真实脚本里的 :NORM 段落, 看它会不会把输入改坏
 $toolText = [System.IO.File]::ReadAllText($tool, $gbk)
@@ -204,9 +211,9 @@ $toolText = [System.IO.File]::ReadAllText($tool, $gbk)
 Write-Host "  [信息] 提取到 NORM 段 $($nm.Value.Length) 字符"
 $p5body = @('@echo off', 'set "x="', 'set /p x=pick: ', 'call :NORM',
             'echo VALUE=[%x%]',
-            'if "%x%"=="11" (echo MATCH) else (echo NOMATCH)') + ($nm.Value -split "`r`n")
+            'if "%x%"=="11" (echo YES-MATCH) else (echo NO-MATCH)') + ($nm.Value -split "`r`n")
 $p5 = & $mkProbe (Join-Path $work 'p5.bat') $p5body
-Test-Case -Name '探针5 真实 :NORM 段' -Bat $p5 -InputText "11`n" -Contain @('MATCH')
+Test-Case -Name '探针5 真实 :NORM 段' -Bat $p5 -InputText "11`n" -Contain @('YES-MATCH')
 
 # 在真实脚本里前后各插一个探测点, 二分定位 set /p 从哪一步开始读不到
 $dbgText = [System.IO.File]::ReadAllText($ScriptPath, $gbk)
