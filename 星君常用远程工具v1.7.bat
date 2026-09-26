@@ -354,6 +354,12 @@ echo.
 echo   该 PID 对应的进程:
 tasklist /fi "PID eq %pid%"
 echo.
+:: 挡住系统关键进程 —— 强制结束它们的后果不可接受(桌面消失 / 蓝屏)
+set "PNAME="
+for /f "tokens=1 delims=," %%n in ('tasklist /fi "PID eq %pid%" /fo csv /nh 2^>nul') do set "PNAME=%%~n"
+for %%n in (explorer.exe winlogon.exe wininit.exe csrss.exe smss.exe services.exe lsass.exe dwm.exe sihost.exe fontdrvhost.exe svchost.exe) do (
+    if /i "%PNAME%"=="%%n" goto KILL_BLOCKED
+)
 set "sure="
 set /p sure=确认强制结束该进程? 输入 Y 确认, 其他键取消: 
 if /i not "%sure%"=="Y" (
@@ -579,17 +585,12 @@ echo   [!] 本工具不会去动你的资源管理器 (结束它会让桌面黑屏几秒,
 echo       远程协助时屏幕一黑连接就断了)。改完之后需要注销再登录,
 echo       或者重启电脑, 才会生效。
 echo.
-echo   [!] 本功能以管理员身份重启资源管理器, 新的资源管理器可能继承
-echo       管理员权限, 导致桌面拖拽 / 部分系统应用异常。
-echo       若出现异常, 注销或重启一次电脑即可恢复。
-echo.
-reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /t REG_SZ /d "%windir%\System32\imageres.dll,-1970" /f
+reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /t REG_SZ /d "%windir%\System32\imageres.dll,197" /f
 if errorlevel 1 (
     echo.
     echo   [!] 写注册表失败, 请确认以管理员身份运行。
     goto DONE
 )
-echo.
 echo.
 echo   注册表已改好。
 echo   注销再登录, 或者重启电脑之后, 小箭头就没了。
@@ -606,9 +607,7 @@ if "%IS_ADMIN%"=="0" (
     goto MENU
 )
 echo -------------------- 恢复快捷方式箭头 --------------------
-echo   [!] 本功能以管理员身份重启资源管理器, 新的资源管理器可能继承
-echo       管理员权限, 导致桌面拖拽 / 部分系统应用异常。
-echo       若出现异常, 注销或重启一次电脑即可恢复。
+echo   [!] 同上: 本工具不会去动你的资源管理器。改完注销或重启后生效。
 echo.
 reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 >nul 2>&1
 if errorlevel 1 (
@@ -786,6 +785,17 @@ if "%IS_ADMIN%"=="1" exit /b
 net session >nul 2>&1
 if not errorlevel 1 set "IS_ADMIN=1"
 exit /b
+
+:KILL_BLOCKED
+echo.
+echo   [!] %PNAME% 是系统关键进程, 强制结束它会导致桌面消失或系统崩溃。
+echo       已阻止, 没有结束任何进程。
+echo.
+echo   要重启资源管理器的话: 按 Ctrl + Shift + Esc 打开任务管理器,
+echo   在「进程」里找到「Windows 资源管理器」, 右键选「重新启动」。
+echo.
+echo   要结束别的程序, 请重新输入它的 PID。
+goto DONE
 
 :DONE
 set "BADCNT=0"
