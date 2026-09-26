@@ -207,6 +207,7 @@ $ver = [regex]::Match($toolSrc, '星君常用远程工具 (v[\d.]+)').Groups[1].
 $hasRestore = $toolSrc.Contains('还原全部改动')
 $hasFixMenu = $toolSrc.Contains('重建图标缓存')
 $hasLockMenu = $toolSrc.Contains('禁止锁屏与休眠')
+$hasToolMenu = $toolSrc.Contains('上帝模式')
 # 主菜单的无效输入提示里写了序号范围, 从文件里读出来, 免得版本一变断言就过期
 $mainRange = [regex]::Match($toolSrc, '无效输入, 请输入 0-(\d+)').Groups[1].Value
 Write-Host "版本     : $ver" 
@@ -294,6 +295,7 @@ Test-Case -Name '菜单能显示并正常退出' `
 $menuItems = @('1   查看完整网络配置', '13   端口占用排查', '0   退出')
 if ($hasRestore) { $menuItems += '26   还原全部改动' }
 if ($hasLockMenu) { $menuItems += '28   禁止锁屏与休眠' }
+if ($hasToolMenu) { $menuItems += '30   常用系统工具' }
 Test-Case -Name '菜单列出全部条目' `
           -InputText "0`n0`n" -BatArgs '/elevated' `
           -Contain $menuItems
@@ -336,6 +338,13 @@ Test-Case -Name '确认提示按 N 走取消分支 (不改系统)' -NeedsAdmin `
 # 所以只测「按 N 取消」这条不会改动系统的路径。
 # Y 分支的正确性由 check_bat.py 保证: 确认块必须是 choice 紧跟 if errorlevel。
 
+
+# 快捷工具子菜单: 只验证能打开能返回, 不真去启动那些程序
+if ($hasToolMenu) {
+    Test-Case -Name '功能 30 快捷工具子菜单能打开并返回' `
+              -InputText "30`n0`n0`n" -BatArgs '/elevated' `
+              -Contain @('事件查看器', '上帝模式')
+}
 
 # 锁屏功能: 只走「按 N 取消」, 不真改电源设置
 if ($hasLockMenu) {

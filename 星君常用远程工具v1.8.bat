@@ -107,6 +107,9 @@ echo   [电源 / 锁屏]
 echo   28   禁止锁屏与休眠  [显示器不关 / 不睡眠 / 唤醒免密码, 需管理员]
 echo   29   恢复锁屏与休眠默认  [需管理员]
 echo.
+echo   [快捷工具]
+echo   30   常用系统工具  [事件查看器 / 服务 / 启动项 / 上帝模式 等, 子菜单]
+echo.
 echo    0   退出
 echo.
 set "choice="
@@ -142,9 +145,10 @@ if "%choice%"=="26" goto RESTORE_ALL
 if "%choice%"=="27" goto FIX_MENU
 if "%choice%"=="28" goto LOCK_OFF
 if "%choice%"=="29" goto LOCK_ON
+if "%choice%"=="30" goto TOOL_MENU
 if "%choice%"=="0"  goto QUIT
 echo.
-echo   无效输入, 请输入 0-29 的序号。
+echo   无效输入, 请输入 0-30 的序号。
 set /a BADCNT+=1
 if %BADCNT% GEQ 5 (
     echo.
@@ -1010,6 +1014,98 @@ reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System" /v Inac
 echo.
 echo   完成。已恢复为常见的默认值。
 goto DONE
+
+:: ---------------- 快捷工具 ----------------
+
+:TOOL_MENU
+cls
+echo -------------------- 常用系统工具 --------------------
+echo   远程指导时, 省得让对方一层层点菜单找。
+echo.
+echo     1   事件查看器          eventvwr.msc      [看报错 / 蓝屏原因]
+echo     2   系统配置 / 启动项    msconfig          [看开机启动项]
+echo     3   服务                services.msc
+echo     4   计算机管理          compmgmt.msc      [设备 / 磁盘 / 服务 / 事件]
+echo     5   程序和功能          appwiz.cpl        [卸载软件]
+echo     6   网络连接            ncpa.cpl          [网卡状态 / 改 IP]
+echo     7   任务管理器          taskmgr
+echo     8   电源选项            powercfg.cpl      [配合功能 28/29]
+echo     9   上帝模式                              [集中了几乎所有系统设置]
+echo.
+echo     0   返回主菜单
+echo.
+:: 只有 10 个选项, 用 choice 单键选择
+choice /c 1234567890 /n /m "请按键选择 [1-9=打开 / 0=返回主菜单]: "
+if errorlevel 10 goto MENU
+if errorlevel 9 goto TOOL_GODMODE
+if errorlevel 8 goto TOOL_POWER
+if errorlevel 7 goto TOOL_TASKMGR
+if errorlevel 6 goto TOOL_NCPA
+if errorlevel 5 goto TOOL_APPWIZ
+if errorlevel 4 goto TOOL_COMPMGMT
+if errorlevel 3 goto TOOL_SERVICES
+if errorlevel 2 goto TOOL_MSCONFIG
+goto TOOL_EVENTVWR
+
+:TOOL_EVENTVWR
+echo.
+echo   正在打开 事件查看器...
+start "" eventvwr.msc
+goto TOOL_OPENED
+
+:TOOL_MSCONFIG
+echo.
+echo   正在打开 系统配置...
+start "" msconfig
+goto TOOL_OPENED
+
+:TOOL_SERVICES
+echo.
+echo   正在打开 服务...
+start "" services.msc
+goto TOOL_OPENED
+
+:TOOL_COMPMGMT
+echo.
+echo   正在打开 计算机管理...
+start "" compmgmt.msc
+goto TOOL_OPENED
+
+:TOOL_APPWIZ
+echo.
+echo   正在打开 程序和功能...
+start "" appwiz.cpl
+goto TOOL_OPENED
+
+:TOOL_NCPA
+echo.
+echo   正在打开 网络连接...
+start "" ncpa.cpl
+goto TOOL_OPENED
+
+:TOOL_TASKMGR
+echo.
+echo   正在打开 任务管理器...
+start "" taskmgr
+goto TOOL_OPENED
+
+:TOOL_POWER
+echo.
+echo   正在打开 电源选项...
+start "" powercfg.cpl
+goto TOOL_OPENED
+
+:TOOL_GODMODE
+echo.
+echo   正在打开 上帝模式 [第一次打开可能要几秒]...
+start "" explorer.exe shell:::{ED7BA470-8E54-465E-825C-99712043E01C}
+goto TOOL_OPENED
+
+:TOOL_OPENED
+echo.
+echo   已打开。可以继续选别的, 或按 0 返回主菜单。
+timeout /t 2 >nul
+goto TOOL_MENU
 
 :: ---------------- 公共子程序 ----------------
 
