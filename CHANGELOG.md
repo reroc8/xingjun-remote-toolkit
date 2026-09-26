@@ -6,137 +6,14 @@
 
 ---
 
-## [v1.7] — 2026-09-26（已删除）
+## [v1.8] — 2026-09-26
 
-> ⚠️ **这一版的 release 和 tag 都已删除。** v1.7 存在多个缺陷（菜单被 `|` 打断、
-> 行尾重复 CR、结束资源管理器导致黑屏）。所有修复都合并进了 v1.8。
+**下载**：[XingjunRemoteTool-v1.8.bat](https://github.com/reroc8/xingjun-remote-toolkit/releases/download/v1.8/XingjunRemoteTool-v1.8.bat)
+**SHA256**：`e1c7a0a76367e4d6606f9b3474b7c1f3d18aad532d45e8bef5aa913c559b5118`
 
-## [v1.7] — 2026-09-26（第二次重发，已删除）
+首个正式发布版，功能从 26 项扩到 31 项。改动如下：
 
-**下载**：[XingjunRemoteTool-v1.7.bat](https://github.com/reroc8/xingjun-remote-toolkit/releases/download/v1.7/XingjunRemoteTool-v1.7.bat)
-**SHA256**：`cc82dec49b7e468c942d52de3455d46f9c58d4b413594063ae9847c700fa6589`
-
-第二次重发。修掉：
-
-- **小箭头图标索引写错**：`imageres.dll,-1970` → **`imageres.dll,197`**。
-  写错时替换出来的是另一个不相干的图标，表现就是"效果不对"
-- **结束资源管理器导致黑屏**（用户实测：整个桌面消失）——
-  功能 24 / 25 和「还原全部改动」里的 `taskkill explorer` + `start explorer` 全部移除。
-  改完只提示「注销再登录或重启后生效」。
-  原因见 [v1.8 条目](#v18--开发中尚未发版) 里的说明（微软问答有完全相同的案例）
-- **功能 13 加了系统关键进程拦截**：按 PID 强制结束进程时，
-  选中 `explorer.exe` / `winlogon.exe` / `lsass.exe` 等关键进程会被直接拦下
-
----
-
-## [v1.7] — 2026-09-26（第一次重发）
-
-**下载**：[XingjunRemoteTool-v1.7.bat](https://github.com/reroc8/xingjun-remote-toolkit/releases/download/v1.7/XingjunRemoteTool-v1.7.bat)
-**SHA256**：`365e35fb79a375268b53856df6355259262c8cdce45df7058a034811bef4825a`
-
-首次发布的 v1.7 完全不可用，已删除 release 与 tag 后重新发布。本次重发修掉：
-
-- **`echo` 里未转义的 `|`**（2 处）：菜单抬头里的 `|` 被 cmd 当成管道，
-  菜单打到第 4 行就中断，之后的功能全部出不来。这个问题从 v1.6 就存在
-- **行尾重复的 CR**（35 行）：改写脚本时把 `\n -> \r\n` 做了两次，
-  `set` 赋值带上 CR，菜单里输入任何序号都判成无效输入
-- **连续无效输入时死循环**：无效输入分支里有 `timeout`，而 `timeout` 会吃掉
-  重定向的剩余输入；加上没有次数保护，输入耗尽后会一直空转烧 CPU
-  （实测能刷出 99 万字符）。现在连续 5 次无效输入自动退出
-
-功能集与 v1.7 原计划一致（26 项），未加入 v1.8 的新特性。
-
-> **后续（2026-09-26）：** v1.7 的功能 24 / 25 里有 `taskkill explorer` + `start explorer`，
-> 和 v1.8 一样会导致**桌面黑屏回不来**（见 v1.8 条目里的说明）。
-> 已改成「改完提示注销或重启后生效」，不再动资源管理器，并**重新发布**了 v1.7
-> （第二次重发，见下面「v1.7 第二次重发」一节）。
-
----
-
-## [v1.7] — 2026-09-26（原版，已删除）
-
-**下载**：[XingjunRemoteTool-v1.7.bat](https://github.com/reroc8/xingjun-remote-toolkit/releases/download/v1.7/XingjunRemoteTool-v1.7.bat)
-**SHA256**：`fa2fc0bb94f524e9133ba83ea7b32092dc037a9b5942f4ea05863bbca6359d8e`
-
-修掉 v1.6 里几个会真正影响使用的问题。
-
-### 修复
-
-- **确认提示可能被残留值误判**（严重）—— 确认变量 `sure` 在 3 处没有提前清空，而 `set /p` 在用户直接回车时**不会**清空变量。
-  后果：用户在上一个提示输过 `Y`，到了下一个提示（比如"确认禁用 UAC"）直接回车想取消，
-  变量仍是 `Y`，会被当成确认执行。**可能导致 UAC 被意外禁用。**
-  已在功能 10 / 11 / 21 / 26 的提示前补上 `set "sure="`。
-- **权限检测误判** —— 原用 `net session` 判断管理员权限。Server 服务（`LanmanServer`）被停用时，
-  即使已经是管理员也会被判成普通用户，需要管理员的功能直接拒绝执行。
-  改用 `fsutil dirty query %SystemDrive%`（不依赖任何服务），`net session` 退为兜底。
-- **禁用系统更新不彻底** —— 补上 `UsoSvc`（Update Orchestrator Service），
-  它会主动把 `wuauserv` 拉回来。现在一并停用并禁用。
-- **重复放行同一端口会失败** —— 规则名固定，第二次添加同名规则会报"已存在"。
-  改为先 `delete rule` 再 `add rule`。
-- `findstr /r /c:` 去掉无效的 `/r` 参数（`/c:` 已把整串当字面量）。
-
-### 新增
-
-- **还原全部改动（功能 26）** —— 一键把防火墙 / 系统更新 / UAC / 快捷方式箭头恢复为默认状态，
-  并通过 PowerShell 清理所有 `星君放行_*` 防火墙规则。执行前会列出将要还原的项并要求确认，
-  不会动 `导出` 目录里的文件。
-
-### 改进
-
-- **输入容错** —— 菜单序号、端口号、PID 自动去掉前后空格，全角数字转半角（`１` → `1`）
-- **服务操作会报告实际结果** —— 新增 `:SVC_OFF` / `:SVC_ON` 子程序，
-  不再只打一行命令就完事，而是回读服务状态并说明是否需要重启才彻底生效
-- **去箭头 / 恢复箭头前明确提示**资源管理器提权的副作用，并给出恢复办法
-
-### 已知限制
-
-- `WaaSMedicSvc`（Windows Update Medic Service）受系统保护，本工具无法禁用，
-  它仍可能把更新服务恢复回来。重跑功能 19 即可。
-- 确认字母（`Y` / `OFF`）只认半角，全角字母不会自动转换。
-
----
-
-## [v1.6] — 2026-09-25（已删除）
-
-首个 GitHub 发布版。
-
-**下载**：[XingjunRemoteTool-v1.6.bat](https://github.com/reroc8/xingjun-remote-toolkit/releases/download/v1.6/XingjunRemoteTool-v1.6.bat)
-**SHA256**：`ce0a7bb62659dbf3efce19d7d2e7da256d4d69e68eb12578701b531bba484c06`
-
-### 新增
-
-- 端口占用排查（功能 13）—— 查出占用进程的 PID，确认后可强制结束
-- UAC 状态查看（功能 23）
-- 恢复快捷方式箭头（功能 25）—— 会先检测是否已去除，避免无谓操作
-
-### 变更
-
-- 菜单按功能域分组：网络 / 防火墙端口 / 系统硬件 / 系统更新 / UAC / 桌面美化，编号重排为 0-25
-- 网络配置导出改为带时间戳的独立文件，统一输出到 `导出` 目录
-- 改配置类功能（防火墙、系统更新、UAC、箭头）统一加入**二次确认**与**执行后验证**，操作完回读当前状态确认生效
-
-### 改进
-
-- 端口号 / PID 输入增加纯数字校验，避免非法输入直接传给系统命令
-- 增加管理员权限预检，权限不足时给出明确指引而不是让命令直接失败
-
-### 已知限制（v1.7 已修）
-
-- ~~权限检测用 `net session`，Server 服务（`LanmanServer`）被停用时会把管理员误判为普通用户~~
-  → 已在 [v1.7] 改用 `fsutil dirty query`
-- ~~禁用系统更新只处理 `wuauserv` 和 `bits`，未处理会把服务拉起的 `UsoSvc`~~
-  → 已在 [v1.7] 补上 `UsoSvc`
-
----
-
-## 未发布
-
-### v1.8（开发中）
-
-仓库主分支上已经是 v1.8，**尚未打 tag 发版**。改动如下：
-
-> 首次发布的 v1.7 是坏的（菜单被打断 + 菜单输入全部失效），已删除并重新发布。
-> 当前 Release 里的 v1.7 是修好的版本。详见下面「v1.7 重新发布」一节。
+> v1.6 和 v1.7 的 release 与 tag 都已删除（它们都有缺陷）。所有修复合并进了这一版。
 
 **修复（都是真机测试发现的）**
 
@@ -245,6 +122,134 @@
 - 确认字母（`Y` / `N`）只认半角
 - `WaaSMedicSvc` 受系统保护，禁不掉
 
+---
+
+## [v1.7] — 2026-09-26（已删除）
+
+> ⚠️ **release 与 tag 都已删除。** v1.7 前后修了三轮，仍有漏网：
+> 菜单被 `|` 打断、行尾重复 CR、输入耗尽死循环、图标索引写错、结束资源管理器导致黑屏。
+> 所有修复都合并进了 v1.8。下面保留当时的记录。
+
+### 第二次重发（也已被删除）
+
+**下载**：[XingjunRemoteTool-v1.7.bat](https://github.com/reroc8/xingjun-remote-toolkit/releases/download/v1.7/XingjunRemoteTool-v1.7.bat)
+**SHA256**：`cc82dec49b7e468c942d52de3455d46f9c58d4b413594063ae9847c700fa6589`
+
+第二次重发。修掉：
+
+- **小箭头图标索引写错**：`imageres.dll,-1970` → **`imageres.dll,197`**。
+  写错时替换出来的是另一个不相干的图标，表现就是"效果不对"
+- **结束资源管理器导致黑屏**（用户实测：整个桌面消失）——
+  功能 24 / 25 和「还原全部改动」里的 `taskkill explorer` + `start explorer` 全部移除。
+  改完只提示「注销再登录或重启后生效」。
+  原因见 [v1.8 条目](#v18--开发中尚未发版) 里的说明（微软问答有完全相同的案例）
+- **功能 13 加了系统关键进程拦截**：按 PID 强制结束进程时，
+  选中 `explorer.exe` / `winlogon.exe` / `lsass.exe` 等关键进程会被直接拦下
+
+---
+
+### 第一次重发
+
+**下载**：[XingjunRemoteTool-v1.7.bat](https://github.com/reroc8/xingjun-remote-toolkit/releases/download/v1.7/XingjunRemoteTool-v1.7.bat)
+**SHA256**：`365e35fb79a375268b53856df6355259262c8cdce45df7058a034811bef4825a`
+
+首次发布的 v1.7 完全不可用，已删除 release 与 tag 后重新发布。本次重发修掉：
+
+- **`echo` 里未转义的 `|`**（2 处）：菜单抬头里的 `|` 被 cmd 当成管道，
+  菜单打到第 4 行就中断，之后的功能全部出不来。这个问题从 v1.6 就存在
+- **行尾重复的 CR**（35 行）：改写脚本时把 `\n -> \r\n` 做了两次，
+  `set` 赋值带上 CR，菜单里输入任何序号都判成无效输入
+- **连续无效输入时死循环**：无效输入分支里有 `timeout`，而 `timeout` 会吃掉
+  重定向的剩余输入；加上没有次数保护，输入耗尽后会一直空转烧 CPU
+  （实测能刷出 99 万字符）。现在连续 5 次无效输入自动退出
+
+功能集与 v1.7 原计划一致（26 项），未加入 v1.8 的新特性。
+
+> **后续（2026-09-26）：** v1.7 的功能 24 / 25 里有 `taskkill explorer` + `start explorer`，
+> 和 v1.8 一样会导致**桌面黑屏回不来**（见 v1.8 条目里的说明）。
+> 已改成「改完提示注销或重启后生效」，不再动资源管理器，并**重新发布**了 v1.7
+> （第二次重发，见下面「v1.7 第二次重发」一节）。
+
+---
+
+### 原版（已删除）
+
+**下载**：[XingjunRemoteTool-v1.7.bat](https://github.com/reroc8/xingjun-remote-toolkit/releases/download/v1.7/XingjunRemoteTool-v1.7.bat)
+**SHA256**：`fa2fc0bb94f524e9133ba83ea7b32092dc037a9b5942f4ea05863bbca6359d8e`
+
+修掉 v1.6 里几个会真正影响使用的问题。
+
+### 修复
+
+- **确认提示可能被残留值误判**（严重）—— 确认变量 `sure` 在 3 处没有提前清空，而 `set /p` 在用户直接回车时**不会**清空变量。
+  后果：用户在上一个提示输过 `Y`，到了下一个提示（比如"确认禁用 UAC"）直接回车想取消，
+  变量仍是 `Y`，会被当成确认执行。**可能导致 UAC 被意外禁用。**
+  已在功能 10 / 11 / 21 / 26 的提示前补上 `set "sure="`。
+- **权限检测误判** —— 原用 `net session` 判断管理员权限。Server 服务（`LanmanServer`）被停用时，
+  即使已经是管理员也会被判成普通用户，需要管理员的功能直接拒绝执行。
+  改用 `fsutil dirty query %SystemDrive%`（不依赖任何服务），`net session` 退为兜底。
+- **禁用系统更新不彻底** —— 补上 `UsoSvc`（Update Orchestrator Service），
+  它会主动把 `wuauserv` 拉回来。现在一并停用并禁用。
+- **重复放行同一端口会失败** —— 规则名固定，第二次添加同名规则会报"已存在"。
+  改为先 `delete rule` 再 `add rule`。
+- `findstr /r /c:` 去掉无效的 `/r` 参数（`/c:` 已把整串当字面量）。
+
+### 新增
+
+- **还原全部改动（功能 26）** —— 一键把防火墙 / 系统更新 / UAC / 快捷方式箭头恢复为默认状态，
+  并通过 PowerShell 清理所有 `星君放行_*` 防火墙规则。执行前会列出将要还原的项并要求确认，
+  不会动 `导出` 目录里的文件。
+
+### 改进
+
+- **输入容错** —— 菜单序号、端口号、PID 自动去掉前后空格，全角数字转半角（`１` → `1`）
+- **服务操作会报告实际结果** —— 新增 `:SVC_OFF` / `:SVC_ON` 子程序，
+  不再只打一行命令就完事，而是回读服务状态并说明是否需要重启才彻底生效
+- **去箭头 / 恢复箭头前明确提示**资源管理器提权的副作用，并给出恢复办法
+
+### 已知限制
+
+- `WaaSMedicSvc`（Windows Update Medic Service）受系统保护，本工具无法禁用，
+  它仍可能把更新服务恢复回来。重跑功能 19 即可。
+- 确认字母（`Y` / `OFF`）只认半角，全角字母不会自动转换。
+
+---
+
+## [v1.6] — 2026-09-25（已删除）
+
+首个 GitHub 发布版。
+
+**下载**：[XingjunRemoteTool-v1.6.bat](https://github.com/reroc8/xingjun-remote-toolkit/releases/download/v1.6/XingjunRemoteTool-v1.6.bat)
+**SHA256**：`ce0a7bb62659dbf3efce19d7d2e7da256d4d69e68eb12578701b531bba484c06`
+
+### 新增
+
+- 端口占用排查（功能 13）—— 查出占用进程的 PID，确认后可强制结束
+- UAC 状态查看（功能 23）
+- 恢复快捷方式箭头（功能 25）—— 会先检测是否已去除，避免无谓操作
+
+### 变更
+
+- 菜单按功能域分组：网络 / 防火墙端口 / 系统硬件 / 系统更新 / UAC / 桌面美化，编号重排为 0-25
+- 网络配置导出改为带时间戳的独立文件，统一输出到 `导出` 目录
+- 改配置类功能（防火墙、系统更新、UAC、箭头）统一加入**二次确认**与**执行后验证**，操作完回读当前状态确认生效
+
+### 改进
+
+- 端口号 / PID 输入增加纯数字校验，避免非法输入直接传给系统命令
+- 增加管理员权限预检，权限不足时给出明确指引而不是让命令直接失败
+
+### 已知限制（v1.7 已修）
+
+- ~~权限检测用 `net session`，Server 服务（`LanmanServer`）被停用时会把管理员误判为普通用户~~
+  → 已在 [v1.7] 改用 `fsutil dirty query`
+- ~~禁用系统更新只处理 `wuauserv` 和 `bits`，未处理会把服务拉起的 `UsoSvc`~~
+  → 已在 [v1.7] 补上 `UsoSvc`
+
+---
+
+## 未发布
+
 ### v1.9（计划）
 
 - [ ] 功能 15（`systeminfo`）耗时较长，加「按 Ctrl+C 中断」的提示或换更快的取数方式
@@ -255,5 +260,6 @@
 
 ---
 
+[v1.8]: https://github.com/reroc8/xingjun-remote-toolkit/releases/tag/v1.8
 [v1.7]: https://github.com/reroc8/xingjun-remote-toolkit/releases/tag/v1.7
 [v1.6]: https://github.com/reroc8/xingjun-remote-toolkit/releases/tag/v1.6
