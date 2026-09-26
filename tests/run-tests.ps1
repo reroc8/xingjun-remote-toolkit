@@ -1,4 +1,7 @@
-# -*- coding: utf-8 -*-
+﻿# -*- coding: utf-8 -*-
+# 注意: 本文件必须保存为 UTF-8 with BOM。
+# Windows PowerShell 5.1 会把没有 BOM 的 UTF-8 脚本按系统 ANSI 代码页读,
+# 里面的中文会全部乱码, 断言就全对不上了。(CI 上踩过)
 <#
 .SYNOPSIS
     星君常用远程工具 —— Windows 冒烟测试。
