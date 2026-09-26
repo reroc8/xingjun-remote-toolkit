@@ -6,7 +6,12 @@
 
 ---
 
-## [v1.7] — 2026-09-26（第二次重发）
+## [v1.7] — 2026-09-26（已删除）
+
+> ⚠️ **这一版的 release 和 tag 都已删除。** v1.7 存在多个缺陷（菜单被 `|` 打断、
+> 行尾重复 CR、结束资源管理器导致黑屏）。所有修复都合并进了 v1.8。
+
+## [v1.7] — 2026-09-26（第二次重发，已删除）
 
 **下载**：[XingjunRemoteTool-v1.7.bat](https://github.com/reroc8/xingjun-remote-toolkit/releases/download/v1.7/XingjunRemoteTool-v1.7.bat)
 **SHA256**：`cc82dec49b7e468c942d52de3455d46f9c58d4b413594063ae9847c700fa6589`
@@ -91,7 +96,7 @@
 
 ---
 
-## [v1.6] — 2026-09-25
+## [v1.6] — 2026-09-25（已删除）
 
 首个 GitHub 发布版。
 
