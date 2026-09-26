@@ -1,14 +1,14 @@
 @echo off
 :: ============================================================
-::  星君常用远程工具 v1.6
+::  星君常用远程工具 v1.7
 ::  作者  : 星君 (Xingjun)  |  gp45.ys168.com
-::  许可  : MIT License    |  更新日期: 2026-09-25
+::  许可  : MIT License    |  更新日期: 2026-09-26
 ::  声明  : 本工具仅修改本机配置, 部分功能需管理员权限,
 ::          使用前请阅读同目录 README 中的注意事项。
 :: ============================================================
 setlocal EnableExtensions
 chcp 936 >nul 2>&1
-title 星君常用远程工具 v1.6  -  作者: 星君
+title 星君常用远程工具 v1.7  -  作者: 星君
 color 0A
 
 set "EXPORT_DIR=%~dp0导出"
@@ -18,7 +18,7 @@ set "UAC_REG=HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Policies\System"
 :MENU
 cls
 echo ========================================================
-echo    [星君] gp45.ys168.com  常用远程工具 v1.6
+echo    [星君] gp45.ys168.com  常用远程工具 v1.7
 echo    ---  网络 / 防火墙 / 系统 / UAC / 桌面管理  ---
 echo    作者: 星君 (Xingjun)  |  License: MIT
 echo ========================================================
@@ -60,10 +60,14 @@ echo   [桌面美化]
 echo   24   去除快捷方式小箭头  [需管理员]
 echo   25   恢复快捷方式小箭头  [需管理员]
 echo.
+echo   [维护]
+echo   26   还原全部改动  [需管理员, 一键恢复防火墙/更新/UAC/箭头]
+echo.
 echo    0   退出
 echo.
 set "choice="
 set /p choice=请输入序号后回车: 
+call :NORM
 
 if "%choice%"=="1"  goto NET_ALL
 if "%choice%"=="2"  goto NET_IP
@@ -90,9 +94,10 @@ if "%choice%"=="22" goto UAC_ON
 if "%choice%"=="23" goto UAC_STATUS
 if "%choice%"=="24" goto ARROW_OFF
 if "%choice%"=="25" goto ARROW_ON
+if "%choice%"=="26" goto RESTORE_ALL
 if "%choice%"=="0"  goto QUIT
 echo.
-echo   无效输入, 请输入 0-25 的序号。
+echo   无效输入, 请输入 0-26 的序号。
 timeout /t 2 >nul
 goto MENU
 
@@ -205,6 +210,7 @@ if "%IS_ADMIN%"=="0" (
 echo -------------------- 开启防火墙 --------------------
 echo   将开启全部配置文件 [域 / 专用 / 公用] 的防火墙。
 echo.
+set "sure="
 set /p sure=确认开启请输入 Y, 其他键取消: 
 if /i not "%sure%"=="Y" (
     echo   已取消。
@@ -235,6 +241,7 @@ echo -------------------- 关闭防火墙 --------------------
 echo   [!] 将关闭全部配置文件的防火墙, 系统将对入站连接不设防。
 echo       若只是某个程序被拦, 建议改用功能 12 放行端口。
 echo.
+set "sure="
 set /p sure=确认关闭请输入 OFF, 其他键取消: 
 if /i not "%sure%"=="OFF" (
     echo   已取消。
@@ -268,6 +275,7 @@ echo   场景: 远程桌面 3389 / 代理 7897 / 自建服务等被防火墙拦截。
 echo.
 set "port="
 set /p port=输入要放行的端口号 [回车返回]: 
+call :NORM
 if not defined port goto MENU
 set "NONNUM="
 for /f "delims=0123456789" %%x in ("%port%") do set "NONNUM=1"
@@ -287,6 +295,8 @@ if /i not "%proto%"=="TCP" if /i not "%proto%"=="UDP" (
 )
 echo.
 echo   正在添加规则: 入站 %proto% %port% 放行...
+echo   [说明] 若已存在同名规则, 会先删除再重建。
+netsh advfirewall firewall delete rule name="星君放行_%proto%_%port%" >nul 2>&1
 netsh advfirewall firewall add rule name="星君放行_%proto%_%port%" dir=in action=allow protocol=%proto% localport=%port%
 if errorlevel 1 (
     echo   [!] 添加失败, 请确认以管理员身份运行。
@@ -303,6 +313,7 @@ cls
 echo -------------------- 端口占用排查 --------------------
 set "port="
 set /p port=输入要排查的端口号 [回车返回]: 
+call :NORM
 if not defined port goto MENU
 set "NONNUM="
 for /f "delims=0123456789" %%x in ("%port%") do set "NONNUM=1"
@@ -313,7 +324,7 @@ if defined NONNUM (
 echo.
 echo   正在查询端口 %port% 的占用情况...
 echo.
-netstat -ano | findstr /r /c:":%port% "
+netstat -ano | findstr /c:":%port% "
 if errorlevel 1 (
     echo   该端口当前无任何占用。
     goto DONE
@@ -323,6 +334,7 @@ echo   上面最后一列数字就是 PID [进程编号]。
 echo.
 set "pid="
 set /p pid=输入要结束的进程 PID [回车返回菜单]: 
+call :NORM
 if not defined pid goto MENU
 set "NONNUM="
 for /f "delims=0123456789" %%x in ("%pid%") do set "NONNUM=1"
@@ -414,20 +426,25 @@ if "%IS_ADMIN%"=="0" (
     goto MENU
 )
 echo -------------------- 禁用系统更新 --------------------
-echo   [1/3] 停止并禁用 Windows Update 服务...
-net stop wuauserv
-sc config wuauserv start= disabled
+echo   [1/4] 停止并禁用 Windows Update 服务  wuauserv
+call :SVC_OFF wuauserv
 echo.
-echo   [2/3] 停止并禁用后台智能传输服务 BITS...
-net stop bits
-sc config bits start= disabled
+echo   [2/4] 停止并禁用后台智能传输服务  bits
+call :SVC_OFF bits
 echo.
-echo   [3/3] 禁用更新相关计划任务...
+echo   [3/4] 停止并禁用更新协调服务  UsoSvc
+call :SVC_OFF UsoSvc
+echo.
+echo   [4/4] 禁用更新相关计划任务
 schtasks /Change /TN "\Microsoft\Windows\UpdateOrchestrator\ScheduledStart" /Disable >nul 2>&1
 schtasks /Change /TN "\Microsoft\Windows\WindowsUpdate\Automatic App Update" /Disable >nul 2>&1
+echo         计划任务已禁用。
 echo.
 echo   系统更新已禁用。
-echo   提示: 部分系统版本会自动恢复更新服务, 若更新再次生效可重跑一次本功能。
+echo.
+echo   说明: Windows Update Medic Service [WaaSMedicSvc] 受系统保护,
+echo         本工具无法禁用它, 它仍可能把更新服务恢复回来。
+echo         若发现更新再次生效, 重跑本功能即可。
 goto DONE
 
 :UPD_ON
@@ -441,17 +458,19 @@ if "%IS_ADMIN%"=="0" (
     goto MENU
 )
 echo -------------------- 启用系统更新 --------------------
-echo   [1/3] 启用 Windows Update 服务...
-sc config wuauserv start= auto
-net start wuauserv
+echo   [1/4] 启用 Windows Update 服务  wuauserv
+call :SVC_ON wuauserv
 echo.
-echo   [2/3] 启用后台智能传输服务 BITS...
-sc config bits start= auto
-net start bits
+echo   [2/4] 启用后台智能传输服务  bits
+call :SVC_ON bits
 echo.
-echo   [3/3] 恢复更新相关计划任务...
+echo   [3/4] 启用更新协调服务  UsoSvc
+call :SVC_ON UsoSvc
+echo.
+echo   [4/4] 恢复更新相关计划任务
 schtasks /Change /TN "\Microsoft\Windows\UpdateOrchestrator\ScheduledStart" /Enable >nul 2>&1
 schtasks /Change /TN "\Microsoft\Windows\WindowsUpdate\Automatic App Update" /Enable >nul 2>&1
+echo         计划任务已恢复。
 echo.
 echo   系统更新已启用。
 goto DONE
@@ -476,6 +495,7 @@ echo       1. 所有程序将静默获得管理员权限, 无任何拦截。
 echo       2. 商店 / UWP 应用大概率打不开, 属正常现象。
 echo       3. 用完请及时用功能 22 恢复启用。
 echo.
+set "sure="
 set /p sure=确认禁用请输入 Y, 其他键取消: 
 if /i not "%sure%"=="Y" (
     echo   已取消。
@@ -548,6 +568,10 @@ echo -------------------- 去除快捷方式箭头 --------------------
 echo   原理: 将快捷方式图标替换为透明图标, 并重启资源管理器。
 echo   桌面和任务栏会闪一下, 属正常现象。
 echo.
+echo   [!] 本功能以管理员身份重启资源管理器, 新的资源管理器可能继承
+echo       管理员权限, 导致桌面拖拽 / 部分系统应用异常。
+echo       若出现异常, 注销或重启一次电脑即可恢复。
+echo.
 reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /t REG_SZ /d "%windir%\System32\imageres.dll,-1970" /f
 if errorlevel 1 (
     echo.
@@ -573,6 +597,10 @@ if "%IS_ADMIN%"=="0" (
     goto MENU
 )
 echo -------------------- 恢复快捷方式箭头 --------------------
+echo   [!] 本功能以管理员身份重启资源管理器, 新的资源管理器可能继承
+echo       管理员权限, 导致桌面拖拽 / 部分系统应用异常。
+echo       若出现异常, 注销或重启一次电脑即可恢复。
+echo.
 reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 >nul 2>&1
 if errorlevel 1 (
     echo   当前未去除箭头, 无需恢复。
@@ -587,7 +615,154 @@ echo.
 echo   完成, 快捷方式小箭头已恢复。
 goto DONE
 
+:: ---------------- 维护 ----------------
+
+:RESTORE_ALL
+cls
+call :CHECK_ADMIN
+if "%IS_ADMIN%"=="0" (
+    echo   [!] 还原全部改动需要管理员权限。
+    echo       请右键本文件 - 以管理员身份运行。
+    echo.
+    pause
+    goto MENU
+)
+echo -------------------- 还原全部改动 --------------------
+echo   本功能会把下列改动一次性恢复为系统默认状态:
+echo.
+echo     1. 防火墙       开启 [域 / 专用 / 公用]
+echo     2. 系统更新     启用 wuauserv / bits / UsoSvc 及计划任务
+echo     3. UAC          启用提权弹窗 [EnableLUA = 1]
+echo     4. 快捷方式箭头 恢复
+echo     5. 放行规则     删除所有名为 星君放行_* 的入站规则
+echo.
+echo   不会动的: 导出的网络配置文件 [导出 目录]
+echo.
+set "sure="
+set /p sure=确认全部还原? 输入 Y 确认, 其他键取消: 
+if /i not "%sure%"=="Y" (
+    echo   已取消。
+    goto DONE
+)
+echo.
+echo   [1/5] 开启防火墙...
+netsh advfirewall set allprofiles state on
+netsh advfirewall show allprofiles state
+echo.
+echo   [2/5] 启用系统更新...
+call :SVC_ON wuauserv
+call :SVC_ON bits
+call :SVC_ON UsoSvc
+schtasks /Change /TN "\Microsoft\Windows\UpdateOrchestrator\ScheduledStart" /Enable >nul 2>&1
+schtasks /Change /TN "\Microsoft\Windows\WindowsUpdate\Automatic App Update" /Enable >nul 2>&1
+echo         计划任务已恢复。
+echo.
+echo   [3/5] 启用 UAC 提权弹窗...
+reg add "%UAC_REG%" /v EnableLUA /t REG_DWORD /d 1 /f >nul 2>&1
+reg query "%UAC_REG%" /v EnableLUA 2>nul
+echo.
+echo   [4/5] 恢复快捷方式箭头...
+reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 >nul 2>&1
+if errorlevel 1 goto RA_NO_ARROW
+reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /f >nul 2>&1
+echo         注册表项已删除, 正在重启资源管理器...
+taskkill /f /im explorer.exe >nul 2>&1
+start explorer.exe
+goto RA_ARROW_DONE
+:RA_NO_ARROW
+echo         当前未去除箭头, 跳过。
+:RA_ARROW_DONE
+echo.
+echo   [5/5] 删除 星君放行_* 防火墙规则...
+set "FWRULE_N=0"
+for /f "delims=" %%n in ('powershell -NoProfile -Command "@(Get-NetFirewallRule -DisplayName '星君放行_*' -ErrorAction SilentlyContinue).Count" 2^>nul') do set "FWRULE_N=%%n"
+if "%FWRULE_N%"=="0" (
+    echo         没有找到 星君放行_* 规则, 无需清理。
+) else (
+    powershell -NoProfile -Command "Get-NetFirewallRule -DisplayName '星君放行_*' -ErrorAction SilentlyContinue | Remove-NetFirewallRule -ErrorAction SilentlyContinue" >nul 2>&1
+    if errorlevel 1 (
+        echo         [!] 清理失败, 可手动运行: netsh advfirewall firewall delete rule name="星君放行_TCP_3389"
+    ) else (
+        echo         已删除 %FWRULE_N% 条 星君放行_* 规则。
+    )
+)
+echo.
+echo   全部改动已还原。
+echo.
+echo   提示: UAC 与系统更新的改动需要重启电脑后彻底生效。
+goto DONE
+
 :: ---------------- 公共子程序 ----------------
+
+:NORM
+:: 归一化输入: 去掉半角/全角空格, 全角数字转半角
+:: 就地处理 choice / port / pid 三个变量, 未定义的跳过
+if defined choice set "choice=%choice: =%"
+if defined choice set "choice=%choice:　=%"
+if defined choice set "choice=%choice:０=0%"
+if defined choice set "choice=%choice:１=1%"
+if defined choice set "choice=%choice:２=2%"
+if defined choice set "choice=%choice:３=3%"
+if defined choice set "choice=%choice:４=4%"
+if defined choice set "choice=%choice:５=5%"
+if defined choice set "choice=%choice:６=6%"
+if defined choice set "choice=%choice:７=7%"
+if defined choice set "choice=%choice:８=8%"
+if defined choice set "choice=%choice:９=9%"
+if defined port set "port=%port: =%"
+if defined port set "port=%port:　=%"
+if defined port set "port=%port:０=0%"
+if defined port set "port=%port:１=1%"
+if defined port set "port=%port:２=2%"
+if defined port set "port=%port:３=3%"
+if defined port set "port=%port:４=4%"
+if defined port set "port=%port:５=5%"
+if defined port set "port=%port:６=6%"
+if defined port set "port=%port:７=7%"
+if defined port set "port=%port:８=8%"
+if defined port set "port=%port:９=9%"
+if defined pid set "pid=%pid: =%"
+if defined pid set "pid=%pid:　=%"
+if defined pid set "pid=%pid:０=0%"
+if defined pid set "pid=%pid:１=1%"
+if defined pid set "pid=%pid:２=2%"
+if defined pid set "pid=%pid:３=3%"
+if defined pid set "pid=%pid:４=4%"
+if defined pid set "pid=%pid:５=5%"
+if defined pid set "pid=%pid:６=6%"
+if defined pid set "pid=%pid:７=7%"
+if defined pid set "pid=%pid:８=8%"
+if defined pid set "pid=%pid:９=9%"
+exit /b
+
+:SVC_OFF
+:: 停止并禁用服务. 用法: call :SVC_OFF 服务名
+net stop %1 >nul 2>&1
+sc config %1 start= disabled >nul 2>&1
+if errorlevel 1 (
+    echo         [!] 服务 %1 不存在或受系统保护, 已跳过。
+    exit /b
+)
+set "SVCST="
+for /f "tokens=3" %%s in ('sc query %1 ^| findstr /i "STATE"') do set "SVCST=%%s"
+if "%SVCST%"=="1" (
+    echo         %1  已停止, 启动类型 = 禁用
+) else (
+    echo         %1  启动类型 = 禁用 [当前仍在运行, 重启后彻底生效]
+)
+exit /b
+
+:SVC_ON
+:: 把服务恢复为自动启动. 用法: call :SVC_ON 服务名
+sc config %1 start= auto >nul 2>&1
+if errorlevel 1 (
+    echo         [!] 服务 %1 不存在, 已跳过。
+    exit /b
+)
+net start %1 >nul 2>&1
+echo         %1  启动类型 = 自动
+exit /b
+
 
 :MAKE_STAMP
 set "STAMP="
@@ -598,8 +773,14 @@ set "STAMP=%STAMP: =0%"
 exit /b
 
 :CHECK_ADMIN
+:: 优先用 fsutil 判断 - 不依赖任何系统服务, 避免 Server 服务被停用时误判
+:: net session 作为兜底, 两者任一通过即认为有管理员权限
+set "IS_ADMIN=0"
+fsutil dirty query %SystemDrive% >nul 2>&1
+if not errorlevel 1 set "IS_ADMIN=1"
+if "%IS_ADMIN%"=="1" exit /b
 net session >nul 2>&1
-if errorlevel 1 (set "IS_ADMIN=0") else (set "IS_ADMIN=1")
+if not errorlevel 1 set "IS_ADMIN=1"
 exit /b
 
 :DONE
@@ -611,7 +792,7 @@ goto MENU
 :QUIT
 cls
 echo ========================================================
-echo    星君常用远程工具 v1.6
+echo    星君常用远程工具 v1.7
 echo    作者: 星君 (Xingjun)  |  License: MIT
 echo    感谢使用, 再见。
 echo ========================================================
