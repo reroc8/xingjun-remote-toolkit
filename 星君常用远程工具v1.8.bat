@@ -606,8 +606,10 @@ if "%IS_ADMIN%"=="0" (
 echo -------------------- 去除快捷方式小箭头 --------------------
 echo   原理: 把快捷方式左下角那个箭头图标, 换成一张接近透明的图标。
 echo.
-echo   [!] 会重启资源管理器: 桌面和任务栏会消失几秒再回来, 属正常, 请等它。
-echo       期间不要强关窗口, 也不要自己再去开任务管理器。
+echo   [!] 本工具不会去动你的资源管理器。
+echo       结束资源管理器会让桌面和任务栏消失几秒 —— 本地没事, 但远程协助时
+echo       屏幕一黑连接就断了, 没法恢复。这个风险不值得让工具替你承担。
+echo       所以: 改完之后需要注销再登录, 或者重启电脑, 才会生效。
 echo.
 reg add "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /t REG_SZ /d "%windir%\System32\imageres.dll,197" /f
 if errorlevel 1 (
@@ -616,11 +618,8 @@ if errorlevel 1 (
     goto DONE
 )
 echo.
-echo   正在重启资源管理器...
-call :RESTART_EXPLORER
-echo.
-echo   完成。
-echo   提示: 如果小箭头还在, 跑一次功能 27 里的「重建图标缓存」刷新一下。
+echo   注册表已改好。
+echo   注销再登录, 或者重启电脑之后, 小箭头就没了。
 goto DONE
 
 :ARROW_ON
@@ -634,7 +633,7 @@ if "%IS_ADMIN%"=="0" (
     goto MENU
 )
 echo -------------------- 恢复快捷方式小箭头 --------------------
-echo   [!] 会重启资源管理器: 桌面和任务栏会消失几秒再回来, 属正常, 请等它。
+echo   [!] 同上: 本工具不会去动你的资源管理器。改完注销或重启后生效。
 echo.
 reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 >nul 2>&1
 if errorlevel 1 (
@@ -643,10 +642,8 @@ if errorlevel 1 (
 )
 echo   正在还原注册表...
 reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /f >nul 2>&1
-echo   正在重启资源管理器...
-call :RESTART_EXPLORER
 echo.
-echo   完成, 快捷方式小箭头已恢复。
+echo   注册表已还原。注销再登录, 或者重启电脑之后, 小箭头就回来了。
 goto DONE
 
 :: ---------------- 维护 ----------------
@@ -700,8 +697,7 @@ echo   [4/5] 恢复快捷方式箭头...
 reg query "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 >nul 2>&1
 if errorlevel 1 goto RA_NO_ARROW
 reg delete "HKLM\SOFTWARE\Microsoft\Windows\CurrentVersion\Explorer\Shell Icons" /v 29 /f >nul 2>&1
-echo         注册表项已删除, 正在重启资源管理器...
-call :RESTART_EXPLORER
+echo         注册表项已删除, 注销或重启后生效。
 goto RA_ARROW_DONE
 :RA_NO_ARROW
 echo         当前未去除箭头, 跳过。
@@ -746,7 +742,7 @@ echo     1   全部修复  [系统文件 + 系统映像 + 网络 + 图标缓存]
 echo     2   系统文件检查修复   sfc /scannow
 echo     3   系统映像修复       DISM /RestoreHealth
 echo     4   网络重置修复       winsock + ip reset + flushdns
-echo     5   重建图标缓存
+echo     5   重建图标缓存  [给手动步骤]
 echo.
 echo     0   返回主菜单
 echo.
@@ -771,7 +767,6 @@ echo   将依次执行:
 echo     1. 系统文件检查修复   sfc /scannow
 echo     2. 系统映像修复       DISM /RestoreHealth
 echo     3. 网络重置修复       winsock + ip reset + flushdns
-echo     4. 重建图标缓存
 echo.
 echo   [!] 整个过程可能要 20-40 分钟, 中途别关窗口。
 echo.
@@ -784,26 +779,21 @@ if errorlevel 2 (
 )
 echo.
 echo ========================================================
-echo   [1/4] 系统文件检查修复  sfc /scannow
+echo   [1/3] 系统文件检查修复  sfc /scannow
 echo ========================================================
 sfc /scannow
 echo.
 echo ========================================================
-echo   [2/4] 系统映像修复  DISM /RestoreHealth
+echo   [2/3] 系统映像修复  DISM /RestoreHealth
 echo ========================================================
 DISM /Online /Cleanup-Image /RestoreHealth
 echo.
 echo ========================================================
-echo   [3/4] 网络重置修复
+echo   [3/3] 网络重置修复
 echo ========================================================
 netsh winsock reset
 netsh int ip reset
 ipconfig /flushdns
-echo.
-echo ========================================================
-echo   [4/4] 重建图标缓存
-echo ========================================================
-call :ICON_REBUILD
 echo.
 echo   全部完成。
 echo   网络设置已重置, 请重启电脑后生效。
@@ -863,50 +853,21 @@ cls
 echo -------------------- 重建图标缓存 --------------------
 echo   适用: 图标变白 / 图标错乱 / 显示成默认图标。
 echo.
-echo   [!] 会重启资源管理器: 桌面和任务栏会消失几秒再回来, 属正常, 请等它。
-echo       这一步会把图标缓存文件删掉让系统重建, 期间不要强关窗口,
-echo       也不要自己去开任务管理器 —— 外壳还没回来的话会看着像卡死。
+echo   [!] 这一步本工具不自动做, 原因:
+echo       重建缓存必须先结束资源管理器, 才能删掉被它占用的缓存文件。
+echo       而结束资源管理器会让桌面和任务栏消失几秒 —— 本地操作没事,
+echo       但远程协助时屏幕一黑连接就断了, 没法恢复。所以不替你动它。
 echo.
-set "sure="
-choice /c YN /n /m "确认重建图标缓存? [Y=执行 /N=取消] "
-if errorlevel 2 (
-    echo.
-    echo   已取消。
-    goto DONE
-)
+echo   手动操作 [安全做法, 不会黑屏]:
+echo     1. 按 Ctrl + Shift + Esc 打开任务管理器
+echo     2. 在「进程」里找到「Windows 资源管理器」
+echo     3. 右键它, 选「重新启动」
+echo     4. 桌面闪一下就会回来, 图标缓存同时重建
 echo.
-call :ICON_REBUILD
+echo   如果做完图标还是不对, 重启一次电脑基本都能好。
 echo.
-echo   完成。图标缓存已重建。
-goto DONE
-
-:ICON_REBUILD
-:: 公共子程序: 清掉图标缓存文件, 然后重启资源管理器
-taskkill /f /im explorer.exe >nul 2>&1
-echo   正在删除旧的图标缓存...
-attrib -s -r -h "%LocalAppData%\IconCache.db" >nul 2>&1
-del /a /f "%LocalAppData%\IconCache.db" >nul 2>&1
-del /a /f "%LocalAppData%\Microsoft\Windows\Explorer\iconcache*" >nul 2>&1
-echo   正在重启资源管理器...
-call :RESTART_EXPLORER
-exit /b
-
-:RESTART_EXPLORER
-:: 公共子程序: 结束资源管理器, 等它自己回来; 没回来才手动启动。
-::
-:: 关键: 不要在这个提权窗口里直接 start explorer.exe ——
-:: 那样起来的资源管理器带管理员权限, 任务栏 / 桌面 / 任务管理器会不正常,
-:: 看着就像卡死。Windows 默认会自动把外壳拉起来, 所以先等一下再检查。
-taskkill /f /im explorer.exe >nul 2>&1
-timeout /t 3 /nobreak >nul
-tasklist /fi "imagename eq explorer.exe" 2>nul | findstr /i "explorer.exe" >nul 2>&1
-if errorlevel 1 (
-    echo   资源管理器没有自动回来, 手动启动...
-    start "" explorer.exe
-) else (
-    echo   资源管理器已自动回来。
-)
-exit /b
+pause
+goto FIX_MENU
 
 :: ---------------- 电源 / 锁屏 ----------------
 
